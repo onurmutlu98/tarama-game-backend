@@ -9,7 +9,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a1a2e 100%);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 25%, #dee2e6 50%, #e9ecef 75%, #f8f9fa 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -18,18 +18,18 @@
         .header {
             text-align: center;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(15px);
-            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         .game-title {
             font-size: 36px;
             font-weight: bold;
-            color: #ffffff;
+            color: #2c3e50;
             margin: 0 0 20px 0;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
             letter-spacing: 2px;
         }
 
@@ -45,10 +45,10 @@
             font-weight: bold;
             padding: 12px 24px;
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
             border: 2px solid;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            text-shadow: none;
         }
 
         .player-red {
@@ -67,10 +67,10 @@
             display: flex;
             justify-content: center;
             gap: 40px;
-            color: #ffffff;
+            color: #2c3e50;
             font-size: 20px;
             font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-shadow: none;
         }
 
         .main-content {
@@ -82,12 +82,12 @@
 
         .left-panel {
             width: 250px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 15px;
             padding: 20px;
             backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
         .game-area {
@@ -105,42 +105,42 @@
         }
 
         .right-top, .right-bottom {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 15px;
             padding: 20px;
             backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
         .current-player {
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 20px;
-            color: #ffffff;
+            color: #2c3e50;
             text-align: center;
             padding: 12px;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.05);
             border-radius: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-shadow: none;
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .coordinates {
             font-size: 14px;
             margin-top: 12px;
             padding: 12px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.05);
             border-radius: 8px;
             border-left: 3px solid #4ecdc4;
-            color: #ffffff;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            color: #2c3e50;
+            text-shadow: none;
         }
 
         .coordinates strong {
-            color: #ffffff;
+            color: #2c3e50;
             font-weight: 600;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            text-shadow: none;
         }
 
         .canvas-container {
@@ -300,13 +300,15 @@
     <div class="header">
         <h1 class="game-title">Grid Oyna</h1>
         <div class="players-info">
-            <div class="player-display player-red">Kırmızı Oyuncu</div>
-            <div style="color: white; font-size: 24px; font-weight: bold; align-self: center;">VS</div>
-            <div class="player-display player-blue">Mavi Oyuncu</div>
-        </div>
-        <div class="scores-display">
-            <div>Kırmızı: <span id="player2-score">0</span></div>
-            <div>Mavi: <span id="player1-score">0</span></div>
+            <div class="player-display player-red">
+                Kırmızı Oyuncu
+                <div style="font-size: 16px; margin-top: 5px;">Kırmızı: <span id="player2-score">0</span></div>
+            </div>
+            <div style="color: #2c3e50; font-size: 24px; font-weight: bold; align-self: center;">VS</div>
+            <div class="player-display player-blue">
+                Mavi Oyuncu
+                <div style="font-size: 16px; margin-top: 5px;">Mavi: <span id="player1-score">0</span></div>
+            </div>
         </div>
     </div>
 
@@ -318,7 +320,12 @@
 
             <div class="coordinates">
                 <strong>Son 10 Hamle:</strong>
-                <div id="all-moves" style="max-height: 200px; overflow-y: auto; margin-top: 8px; font-size: 12px; color: white;"></div>
+                <div id="all-moves" style="max-height: 200px; overflow-y: auto; margin-top: 8px; font-size: 12px; color: #2c3e50;"></div>
+            </div>
+
+            <div class="coordinates" style="margin-top: 15px;">
+                <strong>Çevreleme Bilgisi:</strong>
+                <div id="enclosure-info-left" style="max-height: 150px; overflow-y: auto; margin-top: 8px; font-size: 12px; color: #2c3e50;"></div>
             </div>
         </div>
 
@@ -337,14 +344,14 @@
             <div class="right-top">
                 <div class="coordinates">
                     <strong>Toplam Kontrol Sayısı:</strong>
-                    <div id="total-checks" style="font-size: 14px; color: white; margin-top: 5px;">0</div>
+                    <div id="total-checks" style="font-size: 14px; color: #2c3e50; margin-top: 5px;">0</div>
                 </div>
             </div>
 
             <div class="right-bottom">
                 <div class="coordinates">
                     <strong>Etkisiz Noktalar:</strong>
-                    <div id="disabled-points" style="max-height: 150px; overflow-y: auto; margin-top: 8px; font-size: 11px; color: white; border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.2);"></div>
+                    <div id="disabled-points" style="max-height: 150px; overflow-y: auto; margin-top: 8px; font-size: 11px; color: #2c3e50; border: 2px solid rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.05);"></div>
                 </div>
             </div>
         </div>
@@ -694,7 +701,7 @@
         // Çevreleme gösterimi
         function showEnclosures(enclosures, player) {
             const svg = document.getElementById('enclosureSvg');
-            const infoDiv = document.getElementById('enclosure-info');
+            const infoDiv = document.getElementById('enclosure-info-left'); // Sol paneldeki div'i kullan
 
             // Önceki çizgileri temizle
             svg.innerHTML = '';
@@ -708,11 +715,10 @@
                 // Çizgi çiz
                 drawEnclosureLine(svg, points, color);
 
-                // Bilgi göster - sadece gerekli bilgiler
-
+                // Bilgi göster - sol paneldeki enclosure-info-left div'ine
                 infoDiv.innerHTML = `
-                    <strong>${playerName} ${enclosure.size} noktalı çevreleme yaptı!</strong><br>
-                    Kazanılan puan: ${enclosure.enclosedCount}
+                    <strong style="color: ${color};">${playerName} ${enclosure.size} noktalı çevreleme yaptı!</strong><br>
+                    <span style="color: #2c3e50;">Kazanılan puan: ${enclosure.enclosedCount}</span>
                 `;
 
                 // Skorları güncelle
@@ -810,7 +816,7 @@
             document.getElementById('all-moves').innerHTML = '';
             document.getElementById('current-player-text').textContent = 'Oyuncu 1 (Mavi)';
             document.getElementById('current-player-text').className = 'player-blue';
-            document.getElementById('enclosure-info').innerHTML = '';
+            document.getElementById('enclosure-info-left').innerHTML = ''; // Sol paneldeki div'i temizle
 
             // SVG çizgilerini temizle
             const svg = document.getElementById('enclosureSvg');
