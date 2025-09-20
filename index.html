@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İki Kişilik Grid Oyunu</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #16213e 75%, #1a1a2e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .game-title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ffffff;
+            margin: 0 0 20px 0;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            letter-spacing: 2px;
+        }
+
+        .players-info {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-bottom: 15px;
+        }
+
+        .player-display {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .player-red {
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .player-blue {
+            color: #4ecdc4;
+            border-color: #4ecdc4;
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+        }
+
+        .scores-display {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .left-panel {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .game-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .right-panel {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .right-top, .right-bottom {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .current-player {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .coordinates {
+            font-size: 14px;
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            border-left: 3px solid #4ecdc4;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .coordinates strong {
+            color: #ffffff;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(12, 30px);
+            grid-template-rows: repeat(12, 30px);
+            gap: 3px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 
+                0 8px 32px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            position: relative;
+            border: 2px solid rgba(255,255,255,0.3);
+            width: fit-content;
+            height: fit-content;
+        }
+
+        .enclosure-overlay {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            width: calc(100% - 50px);
+            height: calc(100% - 50px);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .enclosure-line {
+            stroke-width: 3;
+            fill: none;
+            opacity: 0.8;
+        }
+
+        .enclosure-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e8f4fd;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #2c5aa0;
+        }
+
+        .grid-point {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #4a5568;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #ffffff 0%, #f7fafc 100%);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 2px 8px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grid-point::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .grid-point:hover::before {
+            transform: translateX(100%);
+        }
+
+        .grid-point:hover {
+            border-color: #2d3748;
+            transform: scale(1.15);
+            box-shadow: 
+                0 4px 16px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+
+        .grid-point.blue {
+            background: linear-gradient(145deg, #4299e1 0%, #3182ce 100%);
+            border-color: #2b6cb0;
+            box-shadow: 
+                0 4px 12px rgba(66, 153, 225, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+
+        .grid-point.red {
+            background: linear-gradient(145deg, #f56565 0%, #e53e3e 100%);
+            border-color: #c53030;
+            box-shadow: 
+                0 4px 12px rgba(245, 101, 101, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+
+        .grid-point.filled {
+            cursor: not-allowed;
+        }
+
+        .grid-point.filled:hover {
+            transform: none;
+        }
+
+        .grid-point.disabled.blue {
+            background-color: #87ceeb; /* Açık mavi */
+            border-color: #5dade2;
+            opacity: 0.6;
+        }
+
+        .grid-point.disabled.red {
+            background-color: #f1948a; /* Açık kırmızı */
+            border-color: #ec7063;
+            opacity: 0.6;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .player-blue {
+            color: #007bff;
+        }
+
+        .player-red {
+            color: #dc3545;
+        }
+
+        .last-move {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border-left: 4px solid #28a745;
+        }
+
+        /* Gereksiz win message CSS'leri kaldırıldı */
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="game-title">Grid Oyna</h1>
+        <div class="players-info">
+            <div class="player-display player-red">Kırmızı Oyuncu</div>
+            <div style="color: white; font-size: 24px; font-weight: bold; align-self: center;">VS</div>
+            <div class="player-display player-blue">Mavi Oyuncu</div>
+        </div>
+        <div class="scores-display">
+            <div>Kırmızı: <span id="player2-score">0</span></div>
+            <div>Mavi: <span id="player1-score">0</span></div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="left-panel">
+            <div class="current-player">
+                Sıra: <span id="current-player-text" class="player-blue">Oyuncu 1 (Mavi)</span>
+            </div>
+
+            <div class="coordinates">
+                <strong>Son 10 Hamle:</strong>
+                <div id="all-moves" style="max-height: 200px; overflow-y: auto; margin-top: 8px; font-size: 12px; color: white;"></div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="canvas-container">
+                <div class="grid-container" id="grid-container">
+                    <!-- Grid noktaları JavaScript ile oluşturulacak -->
+                </div>
+                <svg id="enclosureSvg" width="100%" height="100%" class="enclosure-overlay">
+                    <!-- Çevreleme çizgileri burada gösterilecek -->
+                </svg>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="right-top">
+                <div class="coordinates">
+                    <strong>Toplam Kontrol Sayısı:</strong>
+                    <div id="total-checks" style="font-size: 14px; color: white; margin-top: 5px;">0</div>
+                </div>
+            </div>
+
+            <div class="right-bottom">
+                <div class="coordinates">
+                    <strong>Etkisiz Noktalar:</strong>
+                    <div id="disabled-points" style="max-height: 150px; overflow-y: auto; margin-top: 8px; font-size: 11px; color: white; border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.2);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="enclosure-info" id="enclosure-info"></div>
+
+    <script>
+        let currentPlayer = 1; // 1 = Mavi (Oyuncu 1), 2 = Kırmızı (Oyuncu 2)
+        let moveCount = 0;
+        let allMoves = [];
+        let gameBoard = Array(12).fill().map(() => Array(12).fill(0)); // 0: boş, 1: mavi, 2: kırmızı
+        let gameEnded = false;
+        let disabledPoints = []; // Etkisiz nokta listesi {x, y, player}
+        let player1Score = 0; // Oyuncu 1'in skoru
+        let player2Score = 0; // Oyuncu 2'nin skoru
+        let enclosedPoints = []; // Daha önce çevrelenmiş noktalar {x, y, player}
+
+        // Çevreleme algoritması için yardımcı fonksiyonlar
+
+        // İki nokta arasındaki mesafeyi hesapla
+        function calculateDistance(x1, y1, x2, y2) {
+            const dx = Math.abs(x2 - x1);
+            const dy = Math.abs(y2 - y1);
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // İki nokta komşu mu kontrol et (mesafe 1 veya √2 olmalı)
+        function areNeighbors(x1, y1, x2, y2) {
+            const distance = calculateDistance(x1, y1, x2, y2);
+            return Math.abs(distance - 1) < 0.001 || Math.abs(distance - Math.sqrt(2)) < 0.001;
+        }
+
+        // Belirli bir oyuncunun noktalarını al
+        function getPlayerPoints(player) {
+            const points = [];
+            for (let row = 0; row < 12; row++) {
+                for (let col = 0; col < 12; col++) {
+                    if (gameBoard[row][col] === player) {
+                        points.push({x: col, y: row});
+                    }
+                }
+            }
+            return points;
+        }
+
+        // Nokta grid sınırları içinde mi kontrol et
+        function isValidPoint(x, y) {
+            return x >= 0 && x < 12 && y >= 0 && y < 12;
+        }
+
+        // Yeni kombinasyon tabanlı çevreleme algoritması
+
+        // Optimized kombinasyon oluşturucu - performans için sınırlı
+        function generateCombinations(points, size) {
+            const combinations = [];
+            const maxCombinations = 50000; // Maksimum kombinasyon sayısını daha da artır
+
+            function combine(start, combo) {
+                if (combinations.length >= maxCombinations) {
+                    return; // Erken çıkış - performans için
+                }
+
+                if (combo.length === size) {
+                    combinations.push([...combo]);
+                    return;
+                }
+
+                for (let i = start; i < points.length && combinations.length < maxCombinations; i++) {
+                    combo.push(points[i]);
+                    combine(i + 1, combo);
+                    combo.pop();
+                }
+            }
+
+            combine(0, []);
+            return combinations;
+        }
+
+        // Optimized kapalı alan kontrolü
+        function isClosedShape(points) {
+            if (points.length < 4 || points.length > 20) return false; // Büyük şekilleri hızlıca reddet
+
+            // Tüm noktalar birbirine komşu mu kontrol et (döngüsel)
+            for (let i = 0; i < points.length; i++) {
+                const current = points[i];
+                const next = points[(i + 1) % points.length];
+
+                if (!areNeighbors(current.x, current.y, next.x, next.y)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Çevreleme alanını hesapla (Shoelace formülü)
+        function calculateEnclosureArea(points) {
+            if (points.length < 3) return 0;
+
+            let area = 0;
+            const n = points.length;
+
+            for (let i = 0; i < n; i++) {
+                const j = (i + 1) % n;
+                area += points[i].x * points[j].y;
+                area -= points[j].x * points[i].y;
+            }
+
+            return Math.abs(area) / 2;
+        }
+
+        // Oyuncunun çevreleme yapıp yapmadığını kontrol et - asenkron versiyon
+        async function checkEnclosures(player) {
+            const playerPoints = getActivePlayerPoints(player); // Etkisiz noktaları hariç tut
+            const opponent = player === 1 ? 2 : 1;
+            const opponentPoints = getPlayerPoints(opponent);
+            const foundEnclosures = [];
+
+            if (playerPoints.length < 4) return foundEnclosures;
+
+            // Maksimum çevreleme nokta sayısı artırıldı
+            const maxSize = Math.min(20, playerPoints.length); // Maksimum 20 nokta ile çevreleme
+            let totalChecked = 0;
+            
+            // Artırılmış kombinasyon sınırları - daha fazla çevreleme bulabilmek için
+            const pointCount = playerPoints.length;
+            let maxTotalChecks;
+            if (pointCount <= 8) {
+                maxTotalChecks = 1000000; // Az nokta = çok yüksek kontrol
+            } else if (pointCount <= 12) {
+                maxTotalChecks = 800000;  // Orta nokta = yüksek kontrol
+            } else if (pointCount <= 16) {
+                maxTotalChecks = 600000;  // Çok nokta = orta kontrol
+            } else if (pointCount <= 20) {
+                maxTotalChecks = 400000;  // 20 nokta = orta kontrol
+            } else {
+                maxTotalChecks = 200000;   // Maksimum nokta = düşük kontrol
+            }
+
+            // Genişletilmiş öncelikli boyutlar - 20 nokta için optimize edildi
+            const prioritySizes = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]; // 20 nokta için genişletildi
+            const remainingSizes = [];
+            
+            for (let size = 4; size <= maxSize; size++) {
+                if (!prioritySizes.includes(size)) {
+                    remainingSizes.push(size);
+                }
+            }
+            
+            const allSizes = [...prioritySizes, ...remainingSizes];
+
+            for (let size of allSizes) {
+                // Üst seviye erken çıkış kontrolünü de kaldırıyoruz - tüm boyutları kontrol et
+                
+                const combinations = generateCombinations(playerPoints, size);
+                totalChecked += combinations.length;
+
+                // 12x12 için optimize edilmiş batch size - performans odaklı
+                const batchSize = 1000; // 2000'den 1000'e düşürüldü - 12x12 için optimize
+                for (let i = 0; i < combinations.length; i += batchSize) {
+                    const batch = combinations.slice(i, i + batchSize);
+                    
+                    for (let combo of batch) {
+                        // Erken çıkış kontrolünü kaldırdık - tüm kombinasyonları kontrol et
+
+                        // Noktaları sırala (konveks hull benzeri)
+                        const sortedCombo = sortPointsClockwise(combo);
+
+                        if (isClosedShape(sortedCombo)) {
+                            // Çevrelenen rakip noktalarını say
+                            let newEnclosedCount = 0;
+                            const newEnclosedOpponents = [];
+                            const allEnclosedOpponents = [];
+
+                            for (let opPoint of opponentPoints) {
+                                if (isPointInPolygon(opPoint.x, opPoint.y, sortedCombo)) {
+                                    allEnclosedOpponents.push(opPoint);
+
+                                    // Bu nokta daha önce çevrelendi mi kontrol et (global enclosedPoints kullan)
+                                    const alreadyEnclosed = enclosedPoints.some(ep =>
+                                        ep.x === opPoint.x && ep.y === opPoint.y && ep.player === opPoint.player
+                                    );
+
+                                    if (!alreadyEnclosed) {
+                                        newEnclosedCount++;
+                                        newEnclosedOpponents.push(opPoint);
+                                        // Global çevrelenmiş noktalar listesine ekle
+                                        enclosedPoints.push({x: opPoint.x, y: opPoint.y, player: opPoint.player});
+                                    }
+                                }
+                            }
+
+                            // Eğer yeni rakip noktası çevrelendiyse puan ver
+                            if (allEnclosedOpponents.length > 0) {
+                                if (player === 1) {
+                                    player1Score += newEnclosedCount;
+                                } else {
+                                    player2Score += newEnclosedCount;
+                                }
+
+                                foundEnclosures.push({
+                                    points: sortedCombo,
+                                    player: player,
+                                    size: size,
+                                    enclosedCount: newEnclosedCount,
+                                    totalEnclosedCount: allEnclosedOpponents.length,
+                                    newEnclosedOpponents: newEnclosedOpponents,
+                                    allEnclosedOpponents: allEnclosedOpponents
+                                });
+                            }
+                        }
+                    }
+                    
+                    // Batch arası gecikmeyi kaldırdık - maksimum hız için
+                    // if (i + batchSize < combinations.length) {
+                    //     await new Promise(resolve => setTimeout(resolve, 1));
+                    // }
+                }
+            }
+
+            // Toplam kontrol sayısını ekranda göster
+            document.getElementById('total-checks').textContent = totalChecked;
+
+            return foundEnclosures;
+        }
+
+        // Noktaları saat yönünde sırala
+        function sortPointsClockwise(points) {
+            // Merkez noktayı bul
+            const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+            const centerY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+
+            return points.sort((a, b) => {
+                const angleA = Math.atan2(a.y - centerY, a.x - centerX);
+                const angleB = Math.atan2(b.y - centerY, b.x - centerX);
+                return angleA - angleB;
+            });
+        }
+
+        // Çevreleme içindeki noktaları bul (Point-in-Polygon algoritması)
+        function getEnclosedPoints(polygonPoints) {
+            const enclosedPoints = [];
+
+            // Tüm grid noktalarını kontrol et
+            for (let row = 0; row < 12; row++) {
+                for (let col = 0; col < 12; col++) {
+                    if (isPointInPolygon(col, row, polygonPoints)) {
+                        enclosedPoints.push({ x: col, y: row });
+                    }
+                }
+            }
+
+            return enclosedPoints;
+        }
+
+        // Point-in-Polygon algoritması (Ray Casting)
+        function isPointInPolygon(x, y, polygon) {
+            let inside = false;
+
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const xi = polygon[i].x, yi = polygon[i].y;
+                const xj = polygon[j].x, yj = polygon[j].y;
+
+                if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+
+            return inside;
+        }
+
+        // Etkisiz nokta kontrolü
+        function isPointDisabled(x, y, player) {
+            return disabledPoints.some(dp => dp.x === x && dp.y === y && dp.player === player);
+        }
+
+        // Etkisiz noktaları güncelle
+        function updateDisabledPoints(enclosures) {
+            enclosures.forEach(enclosure => {
+                // Çevreleme içindeki tüm noktaları bul
+                const enclosedPoints = getEnclosedPoints(enclosure.points);
+                const opponentPlayer = enclosure.player === 1 ? 2 : 1;
+
+                // Sadece çevreleme içindeki rakip noktaları etkisiz yap
+                enclosedPoints.forEach(point => {
+                    if (gameBoard[point.y][point.x] === opponentPlayer) {
+                        // Bu nokta zaten etkisiz mi kontrol et
+                        const alreadyDisabled = disabledPoints.some(dp =>
+                            dp.x === point.x && dp.y === point.y && dp.player === opponentPlayer
+                        );
+
+                        if (!alreadyDisabled) {
+                            disabledPoints.push({
+                                x: point.x,
+                                y: point.y,
+                                player: opponentPlayer
+                            });
+
+                            // Grid üzerindeki noktayı görsel olarak etkisiz yap
+                            const gridPoint = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
+                            if (gridPoint) {
+                                gridPoint.classList.add('disabled');
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Görsel güncelleme
+            updateDisabledPointsDisplay();
+        }
+
+        // Etkisiz noktaları filtreleme - çevreleme yaparken etkisiz noktaları hariç tut
+        function getActivePlayerPoints(player) {
+            const allPoints = getPlayerPoints(player);
+            return allPoints.filter(point => !isPointDisabled(point.x, point.y, player));
+        }
+
+        // Etkisiz noktaları görsel olarak güncelle
+        function updateDisabledPointsDisplay() {
+            const disabledPointsDiv = document.getElementById('disabled-points');
+            disabledPointsDiv.innerHTML = '';
+
+            if (disabledPoints.length === 0) {
+                disabledPointsDiv.innerHTML = '<div style="color: #666; font-style: italic;">Henüz etkisiz nokta yok</div>';
+                return;
+            }
+
+            disabledPoints.forEach((point, index) => {
+                const pointElement = document.createElement('div');
+                const playerName = point.player === 1 ? 'Mavi' : 'Kırmızı';
+                pointElement.textContent = `${index + 1}. ${playerName}: x: ${point.x}, y: ${point.y}`;
+                pointElement.style.padding = '3px';
+                pointElement.style.borderBottom = '1px solid #eee';
+                pointElement.style.color = point.player === 1 ? '#007bff' : '#dc3545';
+                disabledPointsDiv.appendChild(pointElement);
+            });
+        }
+
+        // Skorları güncelle
+        function updateScoreDisplay() {
+            document.getElementById('player1-score').textContent = player1Score;
+            document.getElementById('player2-score').textContent = player2Score;
+        }
+
+        // Çevreleme gösterimi
+        function showEnclosures(enclosures, player) {
+            const svg = document.getElementById('enclosureSvg');
+            const infoDiv = document.getElementById('enclosure-info');
+
+            // Önceki çizgileri temizle
+            svg.innerHTML = '';
+
+            const playerName = player === 1 ? 'Mavi' : 'Kırmızı';
+            const color = player === 1 ? '#007bff' : '#dc3545';
+
+            enclosures.forEach((enclosure, index) => {
+                const points = enclosure.points;
+
+                // Çizgi çiz
+                drawEnclosureLine(svg, points, color);
+
+                // Bilgi göster - sadece gerekli bilgiler
+
+                infoDiv.innerHTML = `
+                    <strong>${playerName} ${enclosure.size} noktalı çevreleme yaptı!</strong><br>
+                    Kazanılan puan: ${enclosure.enclosedCount}
+                `;
+
+                // Skorları güncelle
+                updateScoreDisplay();
+            });
+        }
+
+        // SVG çizgi çiz
+        function drawEnclosureLine(svg, points, color) {
+            // Grid koordinatlarını SVG koordinatlarına çevir
+            // Grid yapısı: 30px nokta + 3px gap = 33px spacing, koyulan nokta merkezlerine göre 2.5 birim offset
+            const svgPoints = points.map(p => ({
+                x: p.x * 33 + 15 + (2.5 * 33), // 33px spacing + 15px nokta merkezi + 2.5 birim sağa
+                y: p.y * 33 + 15 + (2.5 * 33)  // 33px spacing + 15px nokta merkezi + 2.5 birim aşağı
+            }));
+
+            // Polygon oluştur
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            const pointsStr = svgPoints.map(p => `${p.x},${p.y}`).join(' ');
+
+            polygon.setAttribute('points', pointsStr);
+            polygon.setAttribute('stroke', color);
+            polygon.setAttribute('stroke-width', '3');
+            polygon.setAttribute('fill', 'none');
+            polygon.setAttribute('opacity', '0.8');
+
+            svg.appendChild(polygon);
+        }
+
+        // Kazanma mesajını göster
+        function showWinMessage(winCondition) {
+            const playerName = winCondition.winner === 1 ? 'Oyuncu 1 (Mavi)' : 'Oyuncu 2 (Kırmızı)';
+            const playerColor = winCondition.winner === 1 ? '#007bff' : '#dc3545';
+
+            // Çevrelenen alanı vurgula
+            if (winCondition.enclosedArea) {
+                winCondition.enclosedArea.forEach(point => {
+                    const gridPoints = document.querySelectorAll('.grid-point');
+                    const targetPoint = Array.from(gridPoints).find(p =>
+                        parseInt(p.dataset.row) === point.y && parseInt(p.dataset.col) === point.x
+                    );
+                    if (targetPoint) {
+                        targetPoint.classList.add('enclosed-point');
+                    }
+                });
+            }
+
+            // Overlay oluştur
+            const overlay = document.createElement('div');
+            overlay.className = 'win-overlay';
+
+            // Kazanma mesajı oluştur
+            const winMessage = document.createElement('div');
+            winMessage.className = 'win-message';
+            winMessage.innerHTML = `
+                <div class="win-title" style="color: ${playerColor}">🎉 ${playerName} Kazandı! 🎉</div>
+                <div class="win-details">
+                    <strong>Çevreleme Başarılı!</strong><br>
+                    Rakip oyuncuyu başarıyla çevreleyerek oyunu kazandınız.<br>
+                    <small>Çevrelenen alan yeşil renkle vurgulanmıştır.</small>
+                </div>
+                <button class="restart-btn" onclick="restartGame()">Yeni Oyun</button>
+            `;
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(winMessage);
+        }
+
+        // Oyunu yeniden başlat
+        function restartGame() {
+            // Overlay ve mesajı kaldır
+            const overlay = document.querySelector('.win-overlay');
+            const winMessage = document.querySelector('.win-message');
+            if (overlay) overlay.remove();
+            if (winMessage) winMessage.remove();
+
+            // Oyun durumunu sıfırla
+            currentPlayer = 1;
+            moveCount = 0;
+            allMoves = [];
+            gameBoard = Array(12).fill().map(() => Array(12).fill(0));
+            gameEnded = false;
+            disabledPoints = []; // Etkisiz noktaları sıfırla
+            player1Score = 0; // Skorları sıfırla
+            player2Score = 0;
+            enclosedPoints = []; // Çevrelenmiş noktaları sıfırla
+
+            // Grid'i temizle
+            const gridPoints = document.querySelectorAll('.grid-point');
+            gridPoints.forEach(point => {
+                point.className = 'grid-point';
+            });
+
+            // UI'yi sıfırla
+            document.getElementById('all-moves').innerHTML = '';
+            document.getElementById('current-player-text').textContent = 'Oyuncu 1 (Mavi)';
+            document.getElementById('current-player-text').className = 'player-blue';
+            document.getElementById('enclosure-info').innerHTML = '';
+
+            // SVG çizgilerini temizle
+            const svg = document.getElementById('enclosureSvg');
+            if (svg) {
+                svg.innerHTML = '';
+            }
+        }
+
+        // Grid oluştur
+        function createGrid() {
+            const gridContainer = document.getElementById('grid-container');
+
+            for (let row = 0; row < 12; row++) {
+                for (let col = 0; col < 12; col++) {
+                    const point = document.createElement('div');
+                    point.className = 'grid-point';
+                    point.dataset.row = row;
+                    point.dataset.col = col;
+                    point.addEventListener('click', handlePointClick);
+                    gridContainer.appendChild(point);
+                }
+            }
+        }
+
+        // Nokta tıklama işlemi
+        function handlePointClick(event) {
+            const point = event.target;
+
+            // Oyun bittiyse tıklamayı ignore et
+            if (gameEnded) {
+                return;
+            }
+
+            // Eğer nokta zaten doldurulmuşsa, tıklamayı ignore et
+            if (point.classList.contains('filled')) {
+                return;
+            }
+
+            const row = parseInt(point.dataset.row);
+            const col = parseInt(point.dataset.col);
+
+            // Noktayı doldur
+            if (currentPlayer === 1) {
+                point.classList.add('blue', 'filled');
+            } else {
+                point.classList.add('red', 'filled');
+            }
+
+            // Game board'u güncelle
+            gameBoard[row][col] = currentPlayer;
+
+            // Koordinatları kaydet ve göster
+            const coordinates = `x: ${col}, y: ${row}`;
+            const playerName = currentPlayer === 1 ? 'Oyuncu 1 (Mavi)' : 'Oyuncu 2 (Kırmızı)';
+
+            // Son 10 hamleyi güncelle
+            moveCount++;
+            const moveInfo = `${moveCount}. ${playerName}: ${coordinates}`;
+            allMoves.push(moveInfo);
+            
+            // Son 10 hamleyi tut
+            if (allMoves.length > 10) {
+                allMoves.shift();
+            }
+
+            const allMovesDiv = document.getElementById('all-moves');
+            allMovesDiv.innerHTML = ''; // Temizle
+            
+            // Son 10 hamleyi göster
+            allMoves.forEach(move => {
+                const moveElement = document.createElement('div');
+                moveElement.textContent = move;
+                moveElement.style.padding = '5px';
+                moveElement.style.borderBottom = '1px solid #eee';
+                // Oyuncu rengini hamle numarasından belirle
+                const isPlayer1 = move.includes('Oyuncu 1');
+                moveElement.style.color = isPlayer1 ? '#007bff' : '#dc3545';
+                allMovesDiv.appendChild(moveElement);
+            });
+
+            // En son hamleyi görünür yap
+            allMovesDiv.scrollTop = allMovesDiv.scrollHeight;
+
+            // Çevreleme kontrolü yap - oyun bitmez, sadece gösterim
+            const playerForEnclosure = currentPlayer; // Sıra değişmeden önce oyuncuyu kaydet
+            setTimeout(async () => {
+                try {
+                    console.log(`Çevreleme kontrolü başlatılıyor - Oyuncu: ${playerForEnclosure}, Hamle: ${moveCount}`);
+                    const enclosures = await checkEnclosures(playerForEnclosure);
+                    console.log(`Çevreleme kontrolü tamamlandı - Bulunan çevreleme sayısı: ${enclosures.length}`);
+                    if (enclosures.length > 0) {
+                        updateDisabledPoints(enclosures); // Etkisiz noktaları güncelle
+                        showEnclosures(enclosures, playerForEnclosure);
+                        console.log(`Çevreleme gösterimi tamamlandı`);
+                    }
+                } catch (error) {
+                    console.error('Çevreleme kontrolünde hata:', error);
+                }
+            }, 10); // 10ms gecikme ile çevreleme kontrolü (100ms'den azaltıldı)
+
+            // Oyuncu değiştir
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+
+            // Oyuncu bilgisini güncelle
+            const currentPlayerText = document.getElementById('current-player-text');
+            if (currentPlayer === 1) {
+                currentPlayerText.textContent = 'Oyuncu 1 (Mavi)';
+                currentPlayerText.className = 'player-blue';
+            } else {
+                currentPlayerText.textContent = 'Oyuncu 2 (Kırmızı)';
+                currentPlayerText.className = 'player-red';
+            }
+        }
+
+        // Sayfa yüklendiğinde grid'i oluştur
+        document.addEventListener('DOMContentLoaded', function() {
+            createGrid();
+            updateDisabledPointsDisplay(); // Etkisiz noktalar bölümünü başlat
+        });
+    </script>
+</body>
+</html>
