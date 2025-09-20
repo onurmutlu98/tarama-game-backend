@@ -370,6 +370,46 @@
         let player2Score = 0; // Oyuncu 2'nin skoru
         let enclosedPoints = []; // Daha önce çevrelenmiş noktalar {x, y, player}
 
+        // Ses efekti fonksiyonları
+        function playPlacePointSound() {
+            // Web Audio API ile nokta koyma sesi
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        function playEnclosureSound() {
+            // Web Audio API ile çevreleme sesi
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.2);
+            oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.4);
+            
+            gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.4);
+        }
+
         // Çevreleme algoritması için yardımcı fonksiyonlar
 
         // İki nokta arasındaki mesafeyi hesapla
@@ -466,31 +506,39 @@
 
         // Oyuncunun çevreleme yapıp yapmadığını kontrol et - asenkron versiyon
         async function checkEnclosures(player) {
+            console.log(`=== ÇEVRELEMEKONTROLÜBAŞLADİ - Oyuncu: ${player} ===`);
             const playerPoints = getActivePlayerPoints(player); // Etkisiz noktaları hariç tut
             const opponent = player === 1 ? 2 : 1;
             const opponentPoints = getPlayerPoints(opponent);
             const foundEnclosures = [];
 
-            if (playerPoints.length < 4) return foundEnclosures;
+            if (playerPoints.length < 4) {
+                console.log(`Yetersiz nokta sayısı: ${playerPoints.length} (minimum 4 gerekli)`);
+                return foundEnclosures;
+            }
+
+            console.log(`Oyuncu ${player} nokta sayısı: ${playerPoints.length}`);
 
             // Maksimum çevreleme nokta sayısı artırıldı
             const maxSize = Math.min(20, playerPoints.length); // Maksimum 20 nokta ile çevreleme
             let totalChecked = 0;
             
-            // Artırılmış kombinasyon sınırları - daha fazla çevreleme bulabilmek için
+            // Maksimum arttırılmış kombinasyon sınırları - ultra yüksek performans
             const pointCount = playerPoints.length;
             let maxTotalChecks;
             if (pointCount <= 8) {
-                maxTotalChecks = 5000000; // Az nokta = çok yüksek kontrol (5x arttırıldı)
+                maxTotalChecks = 15000000; // Az nokta = mega yüksek kontrol (8M → 15M)
             } else if (pointCount <= 12) {
-                maxTotalChecks = 3000000;  // Orta nokta = yüksek kontrol (3.75x arttırıldı)
+                maxTotalChecks = 12000000;  // Orta nokta = mega yüksek kontrol (6M → 12M)
             } else if (pointCount <= 16) {
-                maxTotalChecks = 2000000;  // Çok nokta = orta kontrol (3.33x arttırıldı)
+                maxTotalChecks = 8000000;  // Çok nokta = ultra yüksek kontrol (4M → 8M)
             } else if (pointCount <= 20) {
-                maxTotalChecks = 1500000;  // 20 nokta = orta kontrol (3.75x arttırıldı)
+                maxTotalChecks = 6000000;   // 20 nokta = ultra yüksek kontrol (3.2M → 6M)
             } else {
-                maxTotalChecks = 1000000;   // Maksimum nokta = düşük kontrol (5x arttırıldı)
+                maxTotalChecks = 4000000;   // Maksimum nokta = çok yüksek kontrol (2M → 4M)
             }
+
+            console.log(`Maksimum kontrol sayısı: ${maxTotalChecks}`);
 
             // Genişletilmiş öncelikli boyutlar - 20 nokta için optimize edildi
             const prioritySizes = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]; // 20 nokta için genişletildi
@@ -503,25 +551,48 @@
             }
             
             const allSizes = [...prioritySizes, ...remainingSizes];
+            console.log(`Kontrol edilecek boyutlar: ${allSizes.join(', ')}`);
 
             for (let size of allSizes) {
-                // Üst seviye erken çıkış kontrolünü de kaldırıyoruz - tüm boyutları kontrol et
+                // Maksimum kontrol sayısı kontrolü - performans için
+                if (totalChecked >= maxTotalChecks) {
+                    console.log(`Maksimum kontrol sayısına ulaşıldı: ${totalChecked}/${maxTotalChecks}`);
+                    break;
+                }
                 
                 const combinations = generateCombinations(playerPoints, size);
+                console.log(`${size} noktalı kombinasyon sayısı: ${combinations.length}`);
+                
+                // Yeni kombinasyonlar eklendiğinde limit kontrolü
+                if (totalChecked + combinations.length > maxTotalChecks) {
+                    const remainingChecks = maxTotalChecks - totalChecked;
+                    console.log(`Kalan kontrol sayısı: ${remainingChecks}, istenen: ${combinations.length}`);
+                    if (remainingChecks <= 0) break;
+                    // Sadece kalan kadar kombinasyonu işle
+                    combinations.splice(remainingChecks);
+                }
+                
                 totalChecked += combinations.length;
 
                 // 12x12 için optimize edilmiş batch size - performans odaklı
                 const batchSize = 1000; // 2000'den 1000'e düşürüldü - 12x12 için optimize
                 for (let i = 0; i < combinations.length; i += batchSize) {
+                    // Her batch'te limit kontrolü
+                    if (totalChecked >= maxTotalChecks) {
+                        console.log(`Batch işlemi sırasında limite ulaşıldı: ${totalChecked}`);
+                        break;
+                    }
+                    
                     const batch = combinations.slice(i, i + batchSize);
                     
                     for (let combo of batch) {
-                        // Erken çıkış kontrolünü kaldırdık - tüm kombinasyonları kontrol et
+                        // Kombinasyon seviyesinde erken çıkış kontrolü
 
                         // Noktaları sırala (konveks hull benzeri)
                         const sortedCombo = sortPointsClockwise(combo);
 
                         if (isClosedShape(sortedCombo)) {
+                            console.log(`Kapalı şekil bulundu! ${size} noktalı kombinasyon`);
                             // Çevrelenen rakip noktalarını say
                             let newEnclosedCount = 0;
                             const newEnclosedOpponents = [];
@@ -545,8 +616,17 @@
                                 }
                             }
 
+                            console.log(`Çevrelenen rakip nokta sayısı: ${allEnclosedOpponents.length} (yeni: ${newEnclosedCount})`);
+
                             // Eğer yeni rakip noktası çevrelendiyse puan ver
                             if (allEnclosedOpponents.length > 0) {
+                                console.log(`ÇEVRELEMEBULUNDu! Oyuncu ${player} - ${size} noktalı çevreleme`);
+                                
+                                // Ses efektini sadece YENİ çevreleme yapıldığında çal
+                                if (newEnclosedCount > 0) {
+                                    playEnclosureSound();
+                                }
+                                
                                 if (player === 1) {
                                     player1Score += newEnclosedCount;
                                 } else {
@@ -562,6 +642,7 @@
                                     newEnclosedOpponents: newEnclosedOpponents,
                                     allEnclosedOpponents: allEnclosedOpponents
                                 });
+                                console.log(`Çevreleme eklendi! Toplam bulunan çevreleme: ${foundEnclosures.length}`);
                             }
                         }
                     }
@@ -575,6 +656,10 @@
 
             // Toplam kontrol sayısını ekranda göster
             document.getElementById('total-checks').textContent = totalChecked;
+
+            console.log(`=== ÇEVRELEMEKONTROLÜTAMAMLANDİ - Oyuncu: ${player} ===`);
+            console.log(`Toplam kontrol sayısı: ${totalChecked}`);
+            console.log(`Bulunan çevreleme sayısı: ${foundEnclosures.length}`);
 
             return foundEnclosures;
         }
@@ -703,8 +788,8 @@
             const svg = document.getElementById('enclosureSvg');
             const infoDiv = document.getElementById('enclosure-info-left'); // Sol paneldeki div'i kullan
 
-            // Önceki çizgileri temizle
-            svg.innerHTML = '';
+            // Önceki çizgileri ARTIK TEMİZLEME - çevreler ekranda kalacak
+            // svg.innerHTML = '';
 
             const playerName = player === 1 ? 'Mavi' : 'Kırmızı';
             const color = player === 1 ? '#007bff' : '#dc3545';
@@ -857,6 +942,9 @@
 
             const row = parseInt(point.dataset.row);
             const col = parseInt(point.dataset.col);
+
+            // Nokta koyma ses efekti çal
+            playPlacePointSound();
 
             // Noktayı doldur
             if (currentPlayer === 1) {
