@@ -474,15 +474,15 @@
             const pointCount = playerPoints.length;
             let maxTotalChecks;
             if (pointCount <= 8) {
-                maxTotalChecks = 1000000; // Az nokta = çok yüksek kontrol
+                maxTotalChecks = 5000000; // Az nokta = çok yüksek kontrol (5x arttırıldı)
             } else if (pointCount <= 12) {
-                maxTotalChecks = 800000;  // Orta nokta = yüksek kontrol
+                maxTotalChecks = 3000000;  // Orta nokta = yüksek kontrol (3.75x arttırıldı)
             } else if (pointCount <= 16) {
-                maxTotalChecks = 600000;  // Çok nokta = orta kontrol
+                maxTotalChecks = 2000000;  // Çok nokta = orta kontrol (3.33x arttırıldı)
             } else if (pointCount <= 20) {
-                maxTotalChecks = 400000;  // 20 nokta = orta kontrol
+                maxTotalChecks = 1500000;  // 20 nokta = orta kontrol (3.75x arttırıldı)
             } else {
-                maxTotalChecks = 200000;   // Maksimum nokta = düşük kontrol
+                maxTotalChecks = 1000000;   // Maksimum nokta = düşük kontrol (5x arttırıldı)
             }
 
             // Genişletilmiş öncelikli boyutlar - 20 nokta için optimize edildi
