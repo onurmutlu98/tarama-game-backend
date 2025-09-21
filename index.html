@@ -534,14 +534,16 @@
                 maxTotalChecks = 8000000;  // Çok nokta = ultra yüksek kontrol (4M → 8M)
             } else if (pointCount <= 20) {
                 maxTotalChecks = 6000000;   // 20 nokta = ultra yüksek kontrol (3.2M → 6M)
+            } else if (pointCount <= 25) {
+                maxTotalChecks = 5000000;   // 25 nokta = yüksek kontrol (yeni)
             } else {
-                maxTotalChecks = 4000000;   // Maksimum nokta = çok yüksek kontrol (2M → 4M)
+                maxTotalChecks = 4000000;   // 30 nokta = yüksek kontrol (2M → 4M)
             }
 
             console.log(`Maksimum kontrol sayısı: ${maxTotalChecks}`);
 
-            // Genişletilmiş öncelikli boyutlar - 20 nokta için optimize edildi
-            const prioritySizes = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]; // 20 nokta için genişletildi
+            // Genişletilmiş öncelikli boyutlar - 30 nokta için optimize edildi
+            const prioritySizes = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]; // 30 nokta için genişletildi
             const remainingSizes = [];
             
             for (let size = 4; size <= maxSize; size++) {
