@@ -448,7 +448,7 @@
         // Optimized kombinasyon oluşturucu - performans için sınırlı
         function generateCombinations(points, size) {
             const combinations = [];
-            const maxCombinations = 50000; // Maksimum kombinasyon sayısını daha da artır
+            const maxCombinations = 100000; // Maksimum kombinasyon sayısını daha da artır
 
             function combine(start, combo) {
                 if (combinations.length >= maxCombinations) {
@@ -768,7 +768,7 @@
                             if (gridPoint) {
                                 gridPoint.classList.add('disabled');
                                 gridPoint.style.backgroundColor = '#ffcccc'; // Boş etkisiz noktalar için açık kırmızı renk
-                                gridPoint.style.border = '2px solid #ff6666'; // Kenar çizgisi ekle
+                                gridPoint.style.border = '2px solid #00cc00'; // Kenar çizgisi yeşil renk
                                 gridPoint.style.cursor = 'not-allowed';
                             }
                         }
