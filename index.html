@@ -767,7 +767,8 @@
                             const gridPoint = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
                             if (gridPoint) {
                                 gridPoint.classList.add('disabled');
-                                gridPoint.style.backgroundColor = '#f0f0f0'; // Boş etkisiz noktalar için gri renk
+                                gridPoint.style.backgroundColor = '#ffcccc'; // Boş etkisiz noktalar için açık kırmızı renk
+                                gridPoint.style.border = '2px solid #ff6666'; // Kenar çizgisi ekle
                                 gridPoint.style.cursor = 'not-allowed';
                             }
                         }
