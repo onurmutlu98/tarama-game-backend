@@ -711,7 +711,10 @@
 
         // Etkisiz nokta kontrolü
         function isPointDisabled(x, y, player) {
-            return disabledPoints.some(dp => dp.x === x && dp.y === y && dp.player === player);
+            // Boş nokta (player = 0) için de etkisiz kontrolü yap
+            return disabledPoints.some(dp => 
+                dp.x === x && dp.y === y && (dp.player === player || dp.player === 0)
+            );
         }
 
         // Etkisiz noktaları güncelle
@@ -721,9 +724,12 @@
                 const enclosedPoints = getEnclosedPoints(enclosure.points);
                 const opponentPlayer = enclosure.player === 1 ? 2 : 1;
 
-                // Sadece çevreleme içindeki rakip noktaları etkisiz yap
+                // Çevreleme içindeki TÜM noktaları etkisiz yap (rakip noktalar + boş noktalar)
                 enclosedPoints.forEach(point => {
-                    if (gameBoard[point.y][point.x] === opponentPlayer) {
+                    const pointValue = gameBoard[point.y][point.x];
+                    
+                    // Rakip oyuncunun noktası ise etkisiz yap
+                    if (pointValue === opponentPlayer) {
                         // Bu nokta zaten etkisiz mi kontrol et
                         const alreadyDisabled = disabledPoints.some(dp =>
                             dp.x === point.x && dp.y === point.y && dp.player === opponentPlayer
@@ -740,6 +746,29 @@
                             const gridPoint = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
                             if (gridPoint) {
                                 gridPoint.classList.add('disabled');
+                            }
+                        }
+                    }
+                    // BOŞ NOKTA ise de etkisiz yap (kimse koyamasın)
+                    else if (pointValue === 0) {
+                        // Bu boş nokta zaten etkisiz mi kontrol et
+                        const alreadyDisabled = disabledPoints.some(dp =>
+                            dp.x === point.x && dp.y === point.y && dp.player === 0
+                        );
+
+                        if (!alreadyDisabled) {
+                            disabledPoints.push({
+                                x: point.x,
+                                y: point.y,
+                                player: 0 // 0 = boş nokta etkisiz
+                            });
+
+                            // Grid üzerindeki boş noktayı görsel olarak etkisiz yap
+                            const gridPoint = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
+                            if (gridPoint) {
+                                gridPoint.classList.add('disabled');
+                                gridPoint.style.backgroundColor = '#f0f0f0'; // Boş etkisiz noktalar için gri renk
+                                gridPoint.style.cursor = 'not-allowed';
                             }
                         }
                     }
@@ -768,11 +797,24 @@
 
             disabledPoints.forEach((point, index) => {
                 const pointElement = document.createElement('div');
-                const playerName = point.player === 1 ? 'Mavi' : 'Kırmızı';
+                let playerName;
+                let color;
+                
+                if (point.player === 0) {
+                    playerName = 'Boş Nokta';
+                    color = '#666';
+                } else if (point.player === 1) {
+                    playerName = 'Mavi';
+                    color = '#007bff';
+                } else {
+                    playerName = 'Kırmızı';
+                    color = '#dc3545';
+                }
+                
                 pointElement.textContent = `${index + 1}. ${playerName}: x: ${point.x}, y: ${point.y}`;
                 pointElement.style.padding = '3px';
                 pointElement.style.borderBottom = '1px solid #eee';
-                pointElement.style.color = point.player === 1 ? '#007bff' : '#dc3545';
+                pointElement.style.color = color;
                 disabledPointsDiv.appendChild(pointElement);
             });
         }
@@ -942,6 +984,12 @@
 
             const row = parseInt(point.dataset.row);
             const col = parseInt(point.dataset.col);
+
+            // Etkisiz nokta kontrolü - boş noktalar da dahil
+            if (isPointDisabled(col, row, 0)) {
+                console.log(`Etkisiz nokta tıklandı: (${col}, ${row})`);
+                return; // Etkisiz noktaya tıklamayı engelle
+            }
 
             // Nokta koyma ses efekti çal
             playPlacePointSound();
