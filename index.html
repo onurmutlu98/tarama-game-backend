@@ -634,8 +634,12 @@
                             await new Promise(resolve => setTimeout(resolve, 0));
                         }
                     }
-                                }
-                            }
+
+                    // Batch sonrası kontrol
+                    if (totalChecked >= maxTotalChecks) {
+                        console.log(`Toplam limit aşıldı: ${totalChecked}`);
+                        break;
+                    }
 
                             console.log(`Çevrelenen rakip nokta sayısı: ${allEnclosedOpponents.length} (yeni: ${newEnclosedCount})`);
 
