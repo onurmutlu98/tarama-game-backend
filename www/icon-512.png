@@ -1,0 +1,23 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#007bff" rx="64"/>
+  <g fill="white">
+    <!-- Grid pattern -->
+    <rect x="96" y="96" width="320" height="320" fill="none" stroke="white" stroke-width="4"/>
+    <line x1="160" y1="96" x2="160" y2="416" stroke="white" stroke-width="2"/>
+    <line x1="224" y1="96" x2="224" y2="416" stroke="white" stroke-width="2"/>
+    <line x1="288" y1="96" x2="288" y2="416" stroke="white" stroke-width="2"/>
+    <line x1="352" y1="96" x2="352" y2="416" stroke="white" stroke-width="2"/>
+    <line x1="96" y1="160" x2="416" y2="160" stroke="white" stroke-width="2"/>
+    <line x1="96" y1="224" x2="416" y2="224" stroke="white" stroke-width="2"/>
+    <line x1="96" y1="288" x2="416" y2="288" stroke="white" stroke-width="2"/>
+    <line x1="96" y1="352" x2="416" y2="352" stroke="white" stroke-width="2"/>
+    <!-- Selected points -->
+    <circle cx="128" cy="128" r="8" fill="#ffd700"/>
+    <circle cx="224" cy="224" r="8" fill="#ffd700"/>
+    <circle cx="320" cy="128" r="8" fill="#ffd700"/>
+    <circle cx="384" cy="320" r="8" fill="#ffd700"/>
+    <circle cx="160" cy="352" r="8" fill="#ffd700"/>
+    <!-- Enclosing line -->
+    <path d="M128,128 L320,128 L384,320 L160,352 L224,224 Z" fill="rgba(255,215,0,0.2)" stroke="#ffd700" stroke-width="4"/>
+  </g>
+</svg>

@@ -8,10 +8,17 @@
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["game", "multiplayer", "socket.io"],
+  "keywords": [
+    "game",
+    "multiplayer",
+    "socket.io"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
     "express": "^4.18.2",
     "socket.io": "^4.7.2"
   },
