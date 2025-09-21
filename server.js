@@ -20,30 +20,68 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Online multiplayer sayfası
+app.get('/online', (req, res) => {
+    res.sendFile(path.join(__dirname, 'online.html'));
+});
+
 // Oyun durumu
 let gameRooms = {};
+
+// Oda ID oluşturucu
+function generateRoomId() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 
 // Socket bağlantıları
 io.on('connection', (socket) => {
     console.log('Yeni oyuncu bağlandı:', socket.id);
 
+    // Yeni oda oluştur
+    socket.on('createRoom', (data) => {
+        const { playerName } = data;
+        const roomId = generateRoomId();
+        
+        gameRooms[roomId] = {
+            players: [],
+            gameState: {
+                grid: Array(20).fill().map(() => Array(20).fill(0)),
+                currentPlayer: 1,
+                gameStarted: false,
+                gameEnded: false,
+                winner: null,
+                disabledPoints: [],
+                player1Score: 0,
+                player2Score: 0,
+                enclosureCount: 0,
+                moveHistory: []
+            }
+        };
+
+        // Oyuncuyu odaya ekle
+        const player = {
+            id: socket.id,
+            name: playerName,
+            playerId: 1
+        };
+        
+        gameRooms[roomId].players.push(player);
+        socket.join(roomId);
+        socket.playerId = 1;
+        socket.roomId = roomId;
+
+        console.log(`Oyuncu ${playerName} yeni oda oluşturdu: ${roomId}`);
+
+        socket.emit('roomCreated', { roomId, playerId: 1, playerName });
+    });
+
     // Oyun odasına katıl
-    socket.on('joinGame', (data) => {
+    socket.on('joinRoom', (data) => {
         const { roomId, playerName } = data;
         
         if (!gameRooms[roomId]) {
-            // Yeni oda oluştur
-            gameRooms[roomId] = {
-                players: [],
-                gameState: {
-                    grid: Array(20).fill().map(() => Array(20).fill(0)),
-                    currentPlayer: 1,
-                    gameStarted: false,
-                    gameEnded: false,
-                    winner: null,
-                    disabledPoints: []
-                }
-            };
+            socket.emit('roomNotFound');
+            return;
         }
 
         const room = gameRooms[roomId];
@@ -55,7 +93,7 @@ io.on('connection', (socket) => {
         }
 
         // Oyuncuyu odaya ekle
-        const playerId = room.players.length + 1;
+        const playerId = 2;
         const player = {
             id: socket.id,
             name: playerName,
@@ -70,7 +108,7 @@ io.on('connection', (socket) => {
         console.log(`Oyuncu ${playerName} (${playerId}) ${roomId} odasına katıldı`);
 
         // Oyuncu bilgilerini gönder
-        socket.emit('playerAssigned', { playerId, playerName });
+        socket.emit('playerJoined', { playerId, playerName, roomId });
         
         // Oda durumunu güncelle
         io.to(roomId).emit('roomUpdate', {
@@ -81,7 +119,10 @@ io.on('connection', (socket) => {
         // 2 oyuncu varsa oyunu başlat
         if (room.players.length === 2) {
             room.gameState.gameStarted = true;
-            io.to(roomId).emit('gameStart', room.gameState);
+            io.to(roomId).emit('gameStart', {
+                gameState: room.gameState,
+                players: room.players
+            });
         }
     });
 
@@ -116,6 +157,7 @@ io.on('connection', (socket) => {
 
         // Hamleyi yap
         gameState.grid[row][col] = socket.playerId;
+        gameState.moveHistory.push({ row, col, player: socket.playerId });
         
         // Çevreleme kontrolü
         const surroundedPoints = checkSurrounding(gameState.grid, row, col, socket.playerId);
@@ -124,6 +166,14 @@ io.on('connection', (socket) => {
             surroundedPoints.forEach(point => {
                 gameState.disabledPoints.push(point);
             });
+            
+            // Skor güncelle
+            if (socket.playerId === 1) {
+                gameState.player1Score += surroundedPoints.length;
+            } else {
+                gameState.player2Score += surroundedPoints.length;
+            }
+            gameState.enclosureCount++;
         }
 
         // Kazanan kontrolü
@@ -142,6 +192,53 @@ io.on('connection', (socket) => {
             lastMove: { row, col, player: socket.playerId },
             surroundedPoints: surroundedPoints
         });
+    });
+
+    // Manuel çevreleme
+    socket.on('manualEnclosure', (data) => {
+        const { roomId, selectedPoints } = data;
+        const room = gameRooms[roomId];
+        
+        if (!room || !room.gameState.gameStarted || room.gameState.gameEnded) {
+            return;
+        }
+
+        const gameState = room.gameState;
+        
+        // Sıra kontrolü
+        if (gameState.currentPlayer !== socket.playerId) {
+            return;
+        }
+
+        // Manuel çevreleme doğrulama
+        const isValidEnclosure = validateManualEnclosure(gameState.grid, selectedPoints, socket.playerId);
+        
+        if (isValidEnclosure) {
+            // Çevrelenen noktaları etkisiz yap
+            selectedPoints.forEach(point => {
+                gameState.disabledPoints.push(point);
+            });
+            
+            // Skor güncelle
+            if (socket.playerId === 1) {
+                gameState.player1Score += selectedPoints.length;
+            } else {
+                gameState.player2Score += selectedPoints.length;
+            }
+            gameState.enclosureCount++;
+
+            // Sırayı değiştir
+            gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
+
+            // Güncellenmiş durumu gönder
+            io.to(roomId).emit('gameUpdate', {
+                gameState: gameState,
+                manualEnclosure: selectedPoints,
+                enclosureValid: true
+            });
+        } else {
+            socket.emit('enclosureInvalid');
+        }
     });
 
     // Bağlantı koptuğunda
@@ -250,6 +347,47 @@ function checkWinner(grid) {
         }
     }
     return null;
+}
+
+// Manuel çevreleme doğrulama fonksiyonu
+function validateManualEnclosure(grid, selectedPoints, playerId) {
+    if (selectedPoints.length === 0) return false;
+    
+    // Seçilen noktaların hepsi boş olmalı
+    for (let point of selectedPoints) {
+        if (grid[point.y][point.x] !== 0) {
+            return false;
+        }
+    }
+    
+    // Çevreleme doğrulama algoritması
+    // Basit kontrol: seçilen noktaların etrafında oyuncunun taşları var mı?
+    for (let point of selectedPoints) {
+        let surrounded = false;
+        const directions = [
+            [-1, -1], [-1, 0], [-1, 1],
+            [0, -1],           [0, 1],
+            [1, -1],  [1, 0],  [1, 1]
+        ];
+        
+        for (let [dx, dy] of directions) {
+            const x = point.x + dx;
+            const y = point.y + dy;
+            
+            if (x >= 0 && x < 20 && y >= 0 && y < 20) {
+                if (grid[y][x] === playerId) {
+                    surrounded = true;
+                    break;
+                }
+            }
+        }
+        
+        if (!surrounded) {
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 const PORT = process.env.PORT || 3000;
