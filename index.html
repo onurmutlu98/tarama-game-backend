@@ -22,6 +22,7 @@
             backdrop-filter: blur(15px);
             border-bottom: 2px solid rgba(0, 0, 0, 0.2);
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: relative;
         }
 
         .game-title {
@@ -345,6 +346,12 @@
                 <div class="coordinates">
                     <strong>Toplam Kontrol Sayısı:</strong>
                     <div id="total-checks" style="font-size: 14px; color: #2c3e50; margin-top: 5px;">0</div>
+                    
+                    <strong style="margin-top: 15px; display: block;">Aktif Nokta Sayıları:</strong>
+                    <div style="margin-top: 5px;">
+                        <div id="blue-points-count" style="font-size: 14px; color: #3498db; margin-top: 3px;">🔵 Mavi: 0</div>
+                        <div id="red-points-count" style="font-size: 14px; color: #e74c3c; margin-top: 3px;">🔴 Kırmızı: 0</div>
+                    </div>
                 </div>
             </div>
 
@@ -575,7 +582,7 @@
                 totalChecked += combinations.length;
 
                 // 12x12 için optimize edilmiş batch size - performans odaklı
-                const batchSize = 1000; // 2000'den 1000'e düşürüldü - 12x12 için optimize
+                const batchSize = 500; // 2000'den 500'e düşürüldü - dörtte birine çıkarıldı
                 for (let i = 0; i < combinations.length; i += batchSize) {
                     // Her batch'te limit kontrolü
                     if (totalChecked >= maxTotalChecks) {
@@ -654,8 +661,11 @@
                 }
             }
 
-            // Toplam kontrol sayısını ekranda göster
-            document.getElementById('total-checks').textContent = totalChecked;
+            // Toplam kontrol sayısını ekranda göster - oyuncu rengi ile
+            const playerColor = player === 1 ? '#3498db' : '#e74c3c'; // Mavi veya kırmızı
+            const playerDot = player === 1 ? '🔵' : '🔴'; // Mavi veya kırmızı nokta
+            document.getElementById('total-checks').innerHTML = `${totalChecked} ${playerDot}`;
+            document.getElementById('total-checks').style.color = playerColor;
 
             console.log(`=== ÇEVRELEMEKONTROLÜTAMAMLANDİ - Oyuncu: ${player} ===`);
             console.log(`Toplam kontrol sayısı: ${totalChecked}`);
@@ -778,6 +788,9 @@
 
             // Görsel güncelleme
             updateDisabledPointsDisplay();
+            
+            // Aktif nokta sayılarını güncelle (etkisiz noktalar değiştiği için)
+            updateActivePointCounts();
         }
 
         // Etkisiz noktaları filtreleme - çevreleme yaparken etkisiz noktaları hariç tut
@@ -818,6 +831,38 @@
                 pointElement.style.color = color;
                 disabledPointsDiv.appendChild(pointElement);
             });
+        }
+
+        // Aktif nokta sayılarını güncelleme fonksiyonu
+        function updateActivePointCounts() {
+            let blueCount = 0;
+            let redCount = 0;
+            
+            // Tüm grid'i tara ve aktif noktaları say (etkisiz olanları hariç tut)
+            for (let row = 0; row < 12; row++) {
+                for (let col = 0; col < 12; col++) {
+                    // Etkisiz nokta kontrolü yap
+                    if (!isPointDisabled(col, row, gameBoard[row][col])) {
+                        if (gameBoard[row][col] === 1) {
+                            blueCount++;
+                        } else if (gameBoard[row][col] === 2) {
+                            redCount++;
+                        }
+                    }
+                }
+            }
+            
+            // UI'yi güncelle
+            const blueCountElement = document.getElementById('blue-points-count');
+            const redCountElement = document.getElementById('red-points-count');
+            
+            if (blueCountElement) {
+                blueCountElement.textContent = `🔵 Mavi: ${blueCount}`;
+            }
+            
+            if (redCountElement) {
+                redCountElement.textContent = `🔴 Kırmızı: ${redCount}`;
+            }
         }
 
         // Skorları güncelle
@@ -908,7 +953,6 @@
                     Rakip oyuncuyu başarıyla çevreleyerek oyunu kazandınız.<br>
                     <small>Çevrelenen alan yeşil renkle vurgulanmıştır.</small>
                 </div>
-                <button class="restart-btn" onclick="restartGame()">Yeni Oyun</button>
             `;
 
             document.body.appendChild(overlay);
@@ -956,6 +1000,9 @@
         // Grid oluştur
         function createGrid() {
             const gridContainer = document.getElementById('grid-container');
+            
+            // Önce mevcut grid'i temizle
+            gridContainer.innerHTML = '';
 
             for (let row = 0; row < 12; row++) {
                 for (let col = 0; col < 12; col++) {
@@ -1057,6 +1104,9 @@
             // Oyuncu değiştir
             currentPlayer = currentPlayer === 1 ? 2 : 1;
 
+            // Aktif nokta sayılarını güncelle
+            updateActivePointCounts();
+
             // Oyuncu bilgisini güncelle
             const currentPlayerText = document.getElementById('current-player-text');
             if (currentPlayer === 1) {
@@ -1068,10 +1118,92 @@
             }
         }
 
+        // Yeni oyun başlatma fonksiyonu
+        function startNewGame() {
+            // Oyun durumunu sıfırla
+            currentPlayer = 1;
+            gameEnded = false;
+            player1Score = 0;
+            player2Score = 0;
+            moveCount = 0;
+            allMoves = [];
+            gameBoard = Array(12).fill().map(() => Array(12).fill(0));
+            disabledPoints = [];
+            enclosedPoints = [];
+            
+            // Grid'i temizle ve yeniden oluştur
+            createGrid();
+            
+            // Skorları güncelle
+            updateScoreDisplay();
+            
+            // Mevcut oyuncuyu güncelle
+            updateCurrentPlayerDisplay();
+            
+            // Tüm UI elementlerini tamamen temizle
+            document.getElementById('all-moves').innerHTML = '';
+            document.getElementById('enclosure-info').innerHTML = '';
+            document.getElementById('enclosure-info-left').innerHTML = '';
+            document.getElementById('total-checks').textContent = '0';
+            document.getElementById('disabled-points').innerHTML = '';
+            
+            // Label'ları da temizle - sadece başlık bırak
+            const allMovesParent = document.getElementById('all-moves').parentElement;
+            allMovesParent.innerHTML = '<strong>Son 10 Hamle:</strong><div id="all-moves" style="max-height: 200px; overflow-y: auto; margin-top: 8px; font-size: 12px; color: #2c3e50;"></div>';
+            
+            const enclosureInfoLeftParent = document.getElementById('enclosure-info-left').parentElement;
+            enclosureInfoLeftParent.innerHTML = '<strong>Çevreleme Bilgisi:</strong><div id="enclosure-info-left" style="max-height: 150px; overflow-y: auto; margin-top: 8px; font-size: 12px; color: #2c3e50;"></div>';
+            
+            const totalChecksParent = document.getElementById('total-checks').parentElement;
+            totalChecksParent.innerHTML = '<strong>Toplam Kontrol Sayısı:</strong><div id="total-checks" style="font-size: 14px; color: #2c3e50; margin-top: 5px;">0</div><strong style="margin-top: 15px; display: block;">Aktif Nokta Sayıları:</strong><div style="margin-top: 5px;"><div id="blue-points-count" style="font-size: 14px; color: #3498db; margin-top: 3px;">🔵 Mavi: 0</div><div id="red-points-count" style="font-size: 14px; color: #e74c3c; margin-top: 3px;">🔴 Kırmızı: 0</div></div>';
+            
+            const disabledPointsParent = document.getElementById('disabled-points').parentElement;
+            disabledPointsParent.innerHTML = '<strong>Etkisiz Noktalar:</strong><div id="disabled-points" style="max-height: 150px; overflow-y: auto; margin-top: 8px; font-size: 11px; color: #2c3e50; border: 2px solid rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.05);"></div>';
+            
+            // SVG çizgilerini tamamen temizle
+            const svg = document.getElementById('enclosureSvg');
+            if (svg) {
+                svg.innerHTML = '';
+                // SVG'yi yeniden oluştur
+                svg.setAttribute('width', '100%');
+                svg.setAttribute('height', '100%');
+                svg.setAttribute('class', 'enclosure-overlay');
+            }
+            
+            // Tüm çevreleme çizgilerini ve polygon'ları temizle
+            const allPolygons = document.querySelectorAll('polygon');
+            allPolygons.forEach(polygon => polygon.remove());
+            
+            const allLines = document.querySelectorAll('line');
+            allLines.forEach(line => line.remove());
+            
+            // Grid noktalarının tüm class'larını temizle
+            const gridPoints = document.querySelectorAll('.grid-point');
+            gridPoints.forEach(point => {
+                point.className = 'grid-point';
+                point.style.backgroundColor = '';
+                point.style.borderColor = '';
+                point.style.opacity = '';
+            });
+            
+            // Etkisiz noktalar bölümünü güncelle
+            updateDisabledPointsDisplay();
+            
+            // Aktif nokta sayılarını güncelle
+            updateActivePointCounts();
+            
+            // Win overlay'lerini kaldır (varsa)
+            const overlay = document.querySelector('.win-overlay');
+            const winMessage = document.querySelector('.win-message');
+            if (overlay) overlay.remove();
+            if (winMessage) winMessage.remove();
+        }
+
         // Sayfa yüklendiğinde grid'i oluştur
         document.addEventListener('DOMContentLoaded', function() {
             createGrid();
             updateDisabledPointsDisplay(); // Etkisiz noktalar bölümünü başlat
+            updateActivePointCounts(); // Aktif nokta sayılarını başlat
         });
     </script>
 </body>
