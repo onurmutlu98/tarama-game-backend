@@ -62,7 +62,8 @@ io.on('connection', (socket) => {
         const player = {
             id: socket.id,
             name: playerName,
-            playerId: 1
+            playerId: 1,
+            ready: false
         };
         
         gameRooms[roomId].players.push(player);
@@ -97,7 +98,8 @@ io.on('connection', (socket) => {
         const player = {
             id: socket.id,
             name: playerName,
-            playerId: playerId
+            playerId: playerId,
+            ready: false
         };
         
         room.players.push(player);
@@ -116,14 +118,7 @@ io.on('connection', (socket) => {
             gameState: room.gameState
         });
 
-        // 2 oyuncu varsa oyunu başlat
-        if (room.players.length === 2) {
-            room.gameState.gameStarted = true;
-            io.to(roomId).emit('gameStart', {
-                gameState: room.gameState,
-                players: room.players
-            });
-        }
+        // Artık otomatik başlatma yok - iki oyuncu da hazır olmalı
     });
 
     // Hamle yap
@@ -239,6 +234,65 @@ io.on('connection', (socket) => {
         } else {
             socket.emit('enclosureInvalid');
         }
+    });
+
+    // Oyuncu hazır durumu
+    socket.on('playerReady', (data) => {
+        const { roomId, playerId, ready } = data;
+        
+        if (!gameRooms[roomId]) {
+            return;
+        }
+        
+        const room = gameRooms[roomId];
+        const player = room.players.find(p => p.playerId === playerId);
+        
+        if (player) {
+            player.ready = ready;
+            console.log(`Oyuncu ${player.name} (${playerId}) hazır durumu: ${ready}`);
+            
+            // Tüm oyunculara hazır durumu değişikliğini bildir
+            io.to(roomId).emit('playerReadyChanged', { playerId, ready });
+            
+            // Oda durumunu güncelle
+            io.to(roomId).emit('roomUpdate', {
+                players: room.players,
+                gameState: room.gameState
+            });
+            
+            // İki oyuncu da hazırsa oyunu başlat
+            if (room.players.length === 2 && room.players.every(p => p.ready)) {
+                room.gameState.gameStarted = true;
+                console.log(`Oda ${roomId} - Oyun başlıyor!`);
+                
+                io.to(roomId).emit('gameStart', {
+                    gameState: room.gameState,
+                    players: room.players
+                });
+            }
+        }
+    });
+
+    // Odadan ayrılma
+    socket.on('leaveRoom', (data) => {
+        const { roomId, playerId } = data;
+        
+        if (gameRooms[roomId]) {
+            const room = gameRooms[roomId];
+            room.players = room.players.filter(p => p.playerId !== playerId);
+            
+            // Oda boşsa sil
+            if (room.players.length === 0) {
+                delete gameRooms[roomId];
+                console.log(`Oda ${roomId} silindi`);
+            } else {
+                // Diğer oyuncuya bildir
+                io.to(roomId).emit('playerDisconnected');
+                console.log(`Oyuncu ${playerId} oda ${roomId}'dan ayrıldı`);
+            }
+        }
+        
+        socket.leave(roomId);
     });
 
     // Bağlantı koptuğunda

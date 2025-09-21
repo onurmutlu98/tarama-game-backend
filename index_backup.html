@@ -14,13 +14,10 @@
     <meta name="mobile-web-app-capable" content="yes">
     
     <!-- Manifest -->
-    <link rel="manifest" href="./manifest.json">
+    <link rel="manifest" href="/manifest.json">
     
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/icon-192.png">
-    
-    <!-- Socket.io CDN -->
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <link rel="apple-touch-icon" href="/icon-192.png">
     <style>
         /* Genel Stiller */
@@ -119,7 +116,7 @@
         }
 
         /* Online Bağlantı Paneli */
-        .online-connection-panel, .room-info-panel {
+        .online-connection-panel {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -127,7 +124,7 @@
             padding: 20px;
         }
 
-        .connection-container, .room-container {
+        .connection-container {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(20px);
             border-radius: 25px;
@@ -137,69 +134,6 @@
             max-width: 500px;
             width: 100%;
             text-align: center;
-            position: relative;
-        }
-
-        .room-code-display {
-            margin: 30px 0;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            border: 2px dashed rgba(255, 255, 255, 0.4);
-        }
-
-        .room-code-big {
-            font-size: 36px;
-            font-weight: bold;
-            color: #333;
-            letter-spacing: 3px;
-            margin: 10px 0;
-            font-family: 'Courier New', monospace;
-        }
-
-        .room-code-info {
-            color: #666;
-            font-size: 14px;
-            margin: 10px 0 0 0;
-        }
-
-        .players-waiting {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 30px 0;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-        }
-
-        .player-info {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .player-icon {
-            font-size: 24px;
-        }
-
-        .player-status-text {
-            font-size: 12px;
-            color: #4CAF50;
-            font-weight: bold;
-        }
-
-        .vs-text {
-            font-size: 18px;
-            font-weight: bold;
-            color: #666;
-        }
-
-        .waiting-message {
-            margin: 20px 0;
-            color: #666;
-            font-style: italic;
         }
 
         .back-button {
@@ -292,137 +226,6 @@
 
         .hidden {
             display: none;
-        }
-
-        /* Bekleme Odası Stilleri */
-        .waiting-room {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .waiting-container {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border-radius: 25px;
-            padding: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .room-code {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 15px;
-            border-radius: 15px;
-            margin: 20px 0;
-            font-size: 24px;
-            font-weight: bold;
-            letter-spacing: 3px;
-            color: #333;
-        }
-
-        .players-status {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 30px 0;
-            gap: 20px;
-        }
-
-        .player-status {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .player-avatar {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-
-        .player-name {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .player-ready {
-            font-size: 16px;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .player-ready.ready {
-            background: #28a745;
-            color: white;
-        }
-
-        .player-ready.not-ready {
-            background: #dc3545;
-            color: white;
-        }
-
-        .vs-divider {
-            font-size: 24px;
-            font-weight: bold;
-            color: #666;
-            margin: 0 10px;
-        }
-
-        .ready-controls {
-            margin: 30px 0;
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
-        }
-
-        .btn-success.not-ready {
-            background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
-        }
-
-        .btn-success.not-ready:hover {
-            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
-        }
-
-        .game-start-message {
-            background: rgba(40, 167, 69, 0.2);
-            border: 2px solid #28a745;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .countdown {
-            font-size: 20px;
-            font-weight: bold;
-            color: #28a745;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
         }
 
         /* Ana Oyun Alanı */
@@ -1017,7 +820,7 @@
                 <div class="mode-card" onclick="selectGameMode('online')">
                     <div class="mode-icon">🌐</div>
                     <h3>Online</h3>
-                    <p>Oda oluştur ve arkadaşlarınla oyna</p>
+                    <p>Farklı cihazlardan oyna</p>
                 </div>
             </div>
         </div>
@@ -1026,7 +829,7 @@
     <!-- Online Bağlantı Paneli -->
     <div id="onlineConnectionPanel" class="online-connection-panel" style="display: none;">
         <div class="connection-container">
-            <h2>🌐 Online Oyun</h2>
+            <h2>Online Multiplayer</h2>
             <div class="back-button" onclick="backToModeSelection()">← Geri</div>
             
             <div class="input-group">
@@ -1035,47 +838,23 @@
             </div>
             
             <div class="button-group">
-                <button class="btn btn-primary" onclick="createRoom()">🎮 Oda Oluştur</button>
-                <button class="btn btn-secondary" onclick="showJoinRoom()">🚪 Odaya Katıl</button>
+                <button class="btn btn-primary" onclick="createRoom()">Yeni Oda Oluştur</button>
+                <button class="btn btn-secondary" onclick="showJoinRoom()">Odaya Katıl</button>
             </div>
-            
-            <div id="joinRoomSection" class="join-room-section" style="display: none; margin-top: 20px;">
-                <div class="input-group">
-                    <label for="roomCodeInput">Oda Kodu:</label>
-                    <input type="text" id="roomCodeInput" placeholder="Oda kodunu girin" maxlength="6" style="text-transform: uppercase;">
-                </div>
-                <button class="btn btn-success" onclick="joinRoom()">✅ Katıl</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Oda Bilgisi Paneli -->
-    <div id="roomInfoPanel" class="room-info-panel" style="display: none;">
-        <div class="room-container">
-            <h2>🎮 Oda Oluşturuldu!</h2>
-            <div class="back-button" onclick="backToModeSelection()">← Ana Menü</div>
-            
-            <div class="room-code-display">
-                <h3>Oda Kodu:</h3>
-                <div id="roomCodeDisplay" class="room-code-big"></div>
-                <p class="room-code-info">Bu kodu arkadaşınla paylaş</p>
-            </div>
-            
-            <div class="players-waiting">
-                <div class="player-info">
-                    <span class="player-icon">👤</span>
-                    <span id="hostPlayerName">Sen</span>
-                    <span class="player-status-text">Hazır</span>
+            <div id="joinRoomSection" class="hidden" style="margin-top: 20px;">
+                <div class="input-group">
+                    <label for="roomId">Oda Kodu:</label>
+                    <input type="text" id="roomId" placeholder="Oda kodunu girin" maxlength="6">
                 </div>
-                <div class="vs-text">VS</div>
-                <div class="player-info waiting">
-                    <span class="player-icon">⏳</span>
-                    <span>Oyuncu bekleniyor...</span>
-                </div>
+                <button class="btn btn-primary" onclick="joinRoom()">Katıl</button>
             </div>
-            
-            <div class="waiting-message">
-                <p>Arkadaşın katılmasını bekliyoruz...</p>
+
+            <!-- Online Durum Paneli -->
+            <div id="onlineStatusPanel" class="online-status-panel" style="display: none;">
+                <div id="roomInfo" class="room-info"></div>
+                <div id="playerInfo" class="player-info"></div>
+                <div id="waitingMessage" class="waiting-message"></div>
             </div>
         </div>
     </div>
@@ -1085,6 +864,7 @@
         <div class="header">
             <h1 class="game-title">Grid Oyna</h1>
             <div class="game-mode-indicator" id="gameModeIndicator">Tek Oyuncu Modu</div>
+            <div class="back-to-menu" onclick="backToModeSelection()">← Ana Menü</div>
             <div class="players-info">
                 <div class="player-display player-red">
                     <span id="player2Name">Kırmızı Oyuncu</span>
@@ -1168,6 +948,9 @@
                     <button id="reset-game-btn" class="control-btn reset-btn" onclick="restartGame()">
                         🔄 Yeni Oyun
                     </button>
+                    <button id="online-game-btn" class="control-btn online-btn" onclick="goToOnline()" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; margin-top: 10px;">
+                        🌐 Online Oyna
+                    </button>
                 </div>
             </div>
         </div>
@@ -1175,7 +958,7 @@
 
     <div class="enclosure-info" id="enclosure-info"></div>
 
-    <script type="text/javascript">
+    <script>
         let currentPlayer = 1; // 1 = Mavi (Oyuncu 1), 2 = Kırmızı (Oyuncu 2)
         let player1TotalPoints = 0; // Oyuncu 1'in toplam koyduğu nokta sayısı
         let player2TotalPoints = 0; // Oyuncu 2'nin toplam koyduğu nokta sayısı
@@ -1188,11 +971,6 @@
         let totalMoves = 0; // Toplam hamle sayısı
         let enclosureCount = 0; // Toplam çevreleme sayısı
         let moveHistory = []; // Hamle geçmişi
-        
-        // Online multiplayer değişkenleri
-        let socket = null;
-        let currentRoom = null;
-        let players = {};
 
         // Ses efekti fonksiyonları
         function playPlacePointSound() {
@@ -1949,9 +1727,6 @@
             const gridPoints = document.querySelectorAll('.grid-point');
             gridPoints.forEach(point => {
                 point.className = 'grid-point';
-                // Inline style'ları da temizle (çevrelenmiş yeşil boş noktalar için)
-                point.style.backgroundColor = '';
-                point.style.border = '';
             });
 
             // UI'yi sıfırla
@@ -1998,6 +1773,13 @@
             const point = event.target;
             const row = parseInt(point.dataset.row);
             const col = parseInt(point.dataset.col);
+
+            // Online modda önce online hamle dene
+            if (currentGameMode === 'online') {
+                if (makeOnlineMove(row, col)) {
+                    return; // Online hamle yapıldı, local işlem yapma
+                }
+            }
 
             // Oyun bittiyse tıklamayı ignore et
             if (gameEnded) {
@@ -2096,6 +1878,17 @@
 
             // Manuel çevreleme seçeneklerini göster
             showMoveOptions();
+
+            // Tek oyuncu modunda bilgisayar hamlesi
+            if (currentGameMode === 'single' && currentPlayer === 1) {
+                // Oyuncu hamle yaptı, şimdi bilgisayar sırası
+                setTimeout(() => {
+                    passTurn(); // Sırayı bilgisayara geç
+                    setTimeout(() => {
+                        makeComputerMove();
+                    }, 500);
+                }, 1000);
+            }
 
             // Otomatik çevreleme kontrolünü kaldır - artık manuel yapılacak
             /*
@@ -2652,6 +2445,7 @@
         }
 
         // Ana oyun alanını kapat
+    </div>
 
         // Sayfa yüklendiğinde grid'i oluştur
         document.addEventListener('DOMContentLoaded', function() {
@@ -2661,9 +2455,80 @@
         });
 
         // Online oyuna git
-        let currentGameMode = 'local'; // 'local', 'online'
-        let isPlayerReady = false;
-        let roomPlayers = {};
+        function goToOnline() {
+            selectGameMode('online');
+        }
+
+        // Online modda hamle yap
+        function makeOnlineMove(row, col) {
+            if (currentGameMode === 'online' && socket && currentRoom) {
+                socket.emit('makeMove', {
+                    roomId: currentRoom,
+                    row: row,
+                    col: col,
+                    playerId: currentPlayer
+                });
+                return true;
+            }
+            return false;
+        }
+
+
+
+        // Bilgisayar hamlesi (tek oyuncu modu için)
+        function makeComputerMove() {
+            const availableMoves = [];
+            
+            for (let row = 0; row < 20; row++) {
+                for (let col = 0; col < 20; col++) {
+                    if (gameBoard[row][col] === 0) {
+                        availableMoves.push({row, col});
+                    }
+                }
+            }
+            
+            if (availableMoves.length === 0) return;
+            
+            // Basit AI: Rastgele hamle
+            const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+            
+            gameBoard[randomMove.row][randomMove.col] = 2;
+            totalMoves++;
+            
+            moveHistory.push({
+                row: randomMove.row,
+                col: randomMove.col,
+                player: 2,
+                moveNumber: totalMoves
+            });
+            
+            playPlacePointSound();
+            
+            // Çevreleme kontrolü
+            const surroundedPoints = checkForSurrounding(2);
+            if (surroundedPoints.length > 0) {
+                surroundedPoints.forEach(point => {
+                    enclosedPoints.push({
+                        x: point.col,
+                        y: point.row,
+                        player: 2
+                    });
+                });
+                
+                player2Score += surroundedPoints.length;
+                enclosureCount++;
+                playEnclosureSound();
+            }
+            
+            // Sırayı oyuncuya ver
+            currentPlayer = 1;
+            updateDisplay();
+        }
+        let currentGameMode = 'local'; // 'single', 'local', 'online'
+        let socket = null;
+        let currentRoom = null;
+        let currentPlayer = null;
+        let players = {};
 
         // Oyun modu seçimi
         function selectGameMode(mode) {
@@ -2672,7 +2537,7 @@
             if (mode === 'online') {
                 document.getElementById('gameModePanel').style.display = 'none';
                 document.getElementById('onlineConnectionPanel').style.display = 'flex';
-            } else {
+            } else if (mode === 'local') {
                 document.getElementById('gameModePanel').style.display = 'none';
                 document.getElementById('gameArea').style.display = 'flex';
                 
@@ -2692,7 +2557,6 @@
         function backToModeSelection() {
             document.getElementById('gameModePanel').style.display = 'flex';
             document.getElementById('onlineConnectionPanel').style.display = 'none';
-            document.getElementById('roomInfoPanel').style.display = 'none';
             document.getElementById('gameArea').style.display = 'none';
             
             // Online bağlantıyı kes
@@ -2705,151 +2569,152 @@
             restartGame();
         }
 
-        // Yeni oda oluştur fonksiyonu
+        // Online bağlantı fonksiyonları
+        function initializeSocket() {
+            if (!socket) {
+                socket = io();
+                
+                // Socket olayları
+                socket.on('roomCreated', (data) => {
+                    currentRoom = data.roomId;
+                    currentPlayer = data.playerId;
+                    
+                    document.getElementById('onlineConnectionPanel').style.display = 'none';
+                    document.getElementById('gameArea').style.display = 'flex';
+                    document.getElementById('gameModeIndicator').textContent = 'Online Multiplayer';
+                    
+                    document.getElementById('player1Name').textContent = data.playerId === 1 ? data.playerName : 'Bekliyor...';
+                    document.getElementById('player2Name').textContent = data.playerId === 2 ? data.playerName : 'Bekliyor...';
+                    
+                    showGameMessage('Oda oluşturuldu! Kod: ' + data.roomId);
+                });
+
+                socket.on('playerJoined', (data) => {
+                    currentRoom = data.roomId;
+                    currentPlayer = data.playerId;
+                    
+                    document.getElementById('onlineConnectionPanel').style.display = 'none';
+                    document.getElementById('gameArea').style.display = 'flex';
+                    document.getElementById('gameModeIndicator').textContent = 'Online Multiplayer';
+                    
+                    showGameMessage('Odaya katıldınız!');
+                });
+
+                socket.on('roomUpdate', (data) => {
+                    players = {};
+                    data.players.forEach(player => {
+                        players[player.playerId] = player;
+                    });
+                    
+                    // Oyuncu isimlerini güncelle
+                    if (players[1]) document.getElementById('player1Name').textContent = players[1].name;
+                    if (players[2]) document.getElementById('player2Name').textContent = players[2].name;
+                });
+
+                socket.on('gameStart', (data) => {
+                    gameBoard = data.gameState.board;
+                    currentPlayer = data.gameState.currentPlayer;
+                    player1Score = data.gameState.player1Score;
+                    player2Score = data.gameState.player2Score;
+                    
+                    players = {};
+                    data.players.forEach(player => {
+                        players[player.playerId] = player;
+                    });
+                    
+                    // Oyuncu isimlerini güncelle
+                    document.getElementById('player1Name').textContent = players[1].name;
+                    document.getElementById('player2Name').textContent = players[2].name;
+                    
+                    updateDisplay();
+                    showGameMessage('Oyun başladı!');
+                });
+
+                socket.on('gameUpdate', (data) => {
+                    gameBoard = data.gameState.board;
+                    currentPlayer = data.gameState.currentPlayer;
+                    player1Score = data.gameState.player1Score;
+                    player2Score = data.gameState.player2Score;
+                    
+                    updateDisplay();
+                    
+                    if (data.surroundedPoints && data.surroundedPoints.length > 0) {
+                        showGameMessage(`${data.surroundedPoints.length} nokta çevrelendi!`);
+                    }
+                });
+
+                socket.on('roomNotFound', () => {
+                    showGameMessage('Oda bulunamadı!');
+                });
+
+                socket.on('roomFull', () => {
+                    showGameMessage('Oda dolu!');
+                });
+
+                socket.on('playerDisconnected', () => {
+                    showGameMessage('Diğer oyuncu ayrıldı!');
+                    backToModeSelection();
+                });
+            }
+        }
+
         function createRoom() {
             const playerName = document.getElementById('playerName').value.trim();
-            
             if (!playerName) {
                 alert('Lütfen oyuncu adınızı girin!');
                 return;
             }
             
-            // Basit oda kodu oluştur (6 haneli)
-            const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-            
-            // Oda bilgilerini göster
-            document.getElementById('onlineConnectionPanel').style.display = 'none';
-            document.getElementById('roomInfoPanel').style.display = 'flex';
-            document.getElementById('roomCodeDisplay').textContent = roomCode;
-            document.getElementById('hostPlayerName').textContent = playerName;
-            
-            // Socket bağlantısı kur (opsiyonel - şimdilik sadece UI)
-            console.log('Oda oluşturuldu:', roomCode, 'Oyuncu:', playerName);
+            initializeSocket();
+            socket.emit('createRoom', { playerName });
         }
 
-        // Odaya katılma bölümünü göster
         function showJoinRoom() {
-            document.getElementById('joinRoomSection').style.display = 'block';
+            document.getElementById('joinRoomSection').classList.remove('hidden');
         }
 
-        // Odaya katıl fonksiyonu
         function joinRoom() {
             const playerName = document.getElementById('playerName').value.trim();
-            const roomCode = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+            const roomId = document.getElementById('roomId').value.trim();
             
-            if (!playerName) {
-                alert('Lütfen oyuncu adınızı girin!');
+            if (!playerName || !roomId) {
+                alert('Lütfen oyuncu adınızı ve oda kodunu girin!');
                 return;
             }
             
-            if (!roomCode || roomCode.length !== 6) {
-                alert('Lütfen geçerli bir oda kodu girin! (6 karakter)');
-                return;
-            }
-            
-            // Socket bağlantısı kur
-            if (!socket) {
-                // Production'da genel socket server kullan
-        const socketUrl = window.location.hostname === 'localhost' ? 
-            'http://localhost:3000' : 
-            'https://tarama-socket-server-production.up.railway.app';
-        socket = io(socketUrl);
-                setupSocketListeners();
-            }
-            
-            // Server'a odaya katılma isteği gönder
-            socket.emit('joinRoom', { roomId: roomCode, playerName: playerName });
-            
-            console.log('Odaya katılma isteği gönderildi:', roomCode, 'Oyuncu:', playerName);
+            initializeSocket();
+            socket.emit('joinRoom', { roomId, playerName });
         }
 
-        // Socket listener'ları kur
-        function setupSocketListeners() {
-            socket.on('playerJoined', (data) => {
-                currentRoom = data.roomId;
-                currentPlayer = data.playerId;
-                
-                document.getElementById('onlineConnectionPanel').style.display = 'none';
-                document.getElementById('gameArea').style.display = 'flex';
-                document.getElementById('gameModeIndicator').textContent = 'Online Multiplayer';
-                
-                showGameMessage('Odaya katıldınız!');
-            });
-
-            socket.on('roomUpdate', (data) => {
-                players = {};
-                data.players.forEach(player => {
-                    players[player.playerId] = player;
-                });
-                
-                // Oyuncu isimlerini güncelle
-                if (players[1]) document.getElementById('player1Name').textContent = players[1].name;
-                if (players[2]) document.getElementById('player2Name').textContent = players[2].name;
-            });
-
-            socket.on('gameStart', (data) => {
-                gameBoard = data.gameState.grid;
-                currentPlayer = data.gameState.currentPlayer;
-                player1Score = data.gameState.player1Score;
-                player2Score = data.gameState.player2Score;
-                
-                players = {};
-                data.players.forEach(player => {
-                    players[player.playerId] = player;
-                });
-                
-                // Oyuncu isimlerini güncelle
-                document.getElementById('player1Name').textContent = players[1].name;
-                document.getElementById('player2Name').textContent = players[2].name;
-                
-                updateDisplay();
-                showGameMessage('Oyun başladı!');
-            });
-
-            socket.on('gameUpdate', (data) => {
-                gameBoard = data.gameState.grid;
-                currentPlayer = data.gameState.currentPlayer;
-                player1Score = data.gameState.player1Score;
-                player2Score = data.gameState.player2Score;
-                
-                updateDisplay();
-                
-                if (data.surroundedPoints && data.surroundedPoints.length > 0) {
-                    showGameMessage(`${data.surroundedPoints.length} nokta çevrelendi!`);
-                }
-            });
-
-            socket.on('roomNotFound', () => {
-                alert('Oda bulunamadı! Lütfen geçerli bir oda kodu girin.');
-            });
-
-            socket.on('roomFull', () => {
-                alert('Oda dolu! Bu odaya katılamazsınız.');
-            });
-
-            socket.on('playerDisconnected', () => {
-                showGameMessage('Diğer oyuncu ayrıldı!');
-                backToModeSelection();
-            });
+        function showGameMessage(message) {
+            // Geçici mesaj gösterme sistemi
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                z-index: 1000;
+                font-weight: 600;
+            `;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
         }
 
-        // Ana menüye dön fonksiyonunu güncelle
-        function backToModeSelection() {
-            document.getElementById('gameModePanel').style.display = 'flex';
-            document.getElementById('onlineConnectionPanel').style.display = 'none';
-            document.getElementById('roomInfoPanel').style.display = 'none';
-            document.getElementById('gameArea').style.display = 'none';
-            
-            // Join room bölümünü gizle
-            document.getElementById('joinRoomSection').style.display = 'none';
-            
-            // Değişkenleri sıfırla
-            currentRoom = null;
-            
-            // Oyunu sıfırla
-            restartGame();
-        }
+        // Global fonksiyonlar - HTML onclick olayları için
+        window.selectGameMode = selectGameMode;
+        window.backToModeSelection = backToModeSelection;
     </script>
+    
+    <!-- Socket.io CDN -->
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
     
     <!-- Service Worker Registration -->
     <script>
