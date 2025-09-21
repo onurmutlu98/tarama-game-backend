@@ -155,8 +155,8 @@
 
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(12, 30px);
-            grid-template-rows: repeat(12, 30px);
+            grid-template-columns: repeat(20, 25px);
+            grid-template-rows: repeat(20, 25px);
             gap: 3px;
             background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
             padding: 25px;
@@ -196,8 +196,8 @@
         }
 
         .grid-point {
-            width: 30px;
-            height: 30px;
+            width: 25px;
+            height: 25px;
             border: 2px solid #4a5568;
             border-radius: 50%;
             background: linear-gradient(145deg, #ffffff 0%, #f7fafc 100%);
@@ -482,7 +482,7 @@
         let allMoves = [];
         let player1TotalPoints = 0; // Oyuncu 1'in toplam koyduğu nokta sayısı
         let player2TotalPoints = 0; // Oyuncu 2'nin toplam koyduğu nokta sayısı
-        let gameBoard = Array(12).fill().map(() => Array(12).fill(0)); // 0: boş, 1: mavi, 2: kırmızı
+        let gameBoard = Array(20).fill().map(() => Array(20).fill(0)); // 0: boş, 1: mavi, 2: kırmızı
         let gameEnded = false;
         let disabledPoints = []; // Etkisiz nokta listesi {x, y, player}
         let player1Score = 0; // Oyuncu 1'in skoru
@@ -541,14 +541,15 @@
         // İki nokta komşu mu kontrol et (mesafe 1 veya √2 olmalı)
         function areNeighbors(x1, y1, x2, y2) {
             const distance = calculateDistance(x1, y1, x2, y2);
+            // Kenar uzunluğu kuralı: sadece 1 birim (yatay/dikey) veya √2 birim (çapraz)
             return Math.abs(distance - 1) < 0.001 || Math.abs(distance - Math.sqrt(2)) < 0.001;
         }
 
         // Belirli bir oyuncunun noktalarını al
         function getPlayerPoints(player) {
             const points = [];
-            for (let row = 0; row < 12; row++) {
-                for (let col = 0; col < 12; col++) {
+            for (let row = 0; row < 20; row++) {
+                for (let col = 0; col < 20; col++) {
                     if (gameBoard[row][col] === player) {
                         points.push({x: col, y: row});
                     }
@@ -559,7 +560,7 @@
 
         // Nokta grid sınırları içinde mi kontrol et
         function isValidPoint(x, y) {
-            return x >= 0 && x < 12 && y >= 0 && y < 12;
+            return x >= 0 && x < 20 && y >= 0 && y < 20;
         }
 
         // Yeni kombinasyon tabanlı çevreleme algoritması
@@ -786,17 +787,91 @@
             return foundEnclosures;
         }
 
-        // Noktaları saat yönünde sırala
+        // Noktaları doğru sırayla birleştirmek için geliştirilmiş sıralama
         function sortPointsClockwise(points) {
+            if (points.length < 3) return points;
+            
             // Merkez noktayı bul
             const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
             const centerY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
 
-            return points.sort((a, b) => {
+            // Noktaları açıya göre sırala
+            const sortedPoints = points.sort((a, b) => {
                 const angleA = Math.atan2(a.y - centerY, a.x - centerX);
                 const angleB = Math.atan2(b.y - centerY, b.x - centerX);
                 return angleA - angleB;
             });
+
+            // Sıralı noktaların gerçekten birbirine komşu olup olmadığını kontrol et
+            const validPath = [];
+            validPath.push(sortedPoints[0]);
+
+            for (let i = 1; i < sortedPoints.length; i++) {
+                const current = validPath[validPath.length - 1];
+                const next = sortedPoints[i];
+                
+                // Eğer komşu değilse, aralarında bir yol bul
+                if (!areNeighbors(current.x, current.y, next.x, next.y)) {
+                    const path = findPath(current, next, points);
+                    if (path.length > 1) {
+                        // İlk noktayı atla (zaten validPath'te var)
+                        for (let j = 1; j < path.length; j++) {
+                            validPath.push(path[j]);
+                        }
+                    } else {
+                        validPath.push(next);
+                    }
+                } else {
+                    validPath.push(next);
+                }
+            }
+
+            // Son nokta ile ilk nokta arasında da kontrol yap
+            const first = validPath[0];
+            const last = validPath[validPath.length - 1];
+            if (!areNeighbors(last.x, last.y, first.x, first.y)) {
+                const path = findPath(last, first, points);
+                if (path.length > 2) {
+                    // İlk ve son noktayı atla
+                    for (let j = 1; j < path.length - 1; j++) {
+                        validPath.push(path[j]);
+                    }
+                }
+            }
+
+            return validPath;
+        }
+
+        // İki nokta arasında geçerli bir yol bul
+        function findPath(start, end, availablePoints) {
+            // Basit A* benzeri algoritma
+            const visited = new Set();
+            const queue = [{point: start, path: [start]}];
+            
+            while (queue.length > 0) {
+                const {point, path} = queue.shift();
+                const key = `${point.x},${point.y}`;
+                
+                if (visited.has(key)) continue;
+                visited.add(key);
+                
+                if (point.x === end.x && point.y === end.y) {
+                    return path;
+                }
+                
+                // Komşu noktaları bul
+                for (let nextPoint of availablePoints) {
+                    const nextKey = `${nextPoint.x},${nextPoint.y}`;
+                    if (!visited.has(nextKey) && areNeighbors(point.x, point.y, nextPoint.x, nextPoint.y)) {
+                        queue.push({
+                            point: nextPoint,
+                            path: [...path, nextPoint]
+                        });
+                    }
+                }
+            }
+            
+            return [start, end]; // Yol bulunamazsa direkt bağla
         }
 
         // Çevreleme içindeki noktaları bul (Point-in-Polygon algoritması)
@@ -804,8 +879,8 @@
             const enclosedPoints = [];
 
             // Tüm grid noktalarını kontrol et
-            for (let row = 0; row < 12; row++) {
-                for (let col = 0; col < 12; col++) {
+            for (let row = 0; row < 20; row++) {
+                for (let col = 0; col < 20; col++) {
                     if (isPointInPolygon(col, row, polygonPoints)) {
                         enclosedPoints.push({ x: col, y: row });
                     }
@@ -815,20 +890,128 @@
             return enclosedPoints;
         }
 
-        // Point-in-Polygon algoritması (Ray Casting)
+        // Point-in-Polygon algoritması (Ray Casting) - Ultra geliştirilmiş versiyon
         function isPointInPolygon(x, y, polygon) {
+            if (polygon.length < 3) return false;
+            
             let inside = false;
+            const n = polygon.length;
 
-            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            // Ana ray casting algoritması
+            for (let i = 0, j = n - 1; i < n; j = i++) {
                 const xi = polygon[i].x, yi = polygon[i].y;
                 const xj = polygon[j].x, yj = polygon[j].y;
 
-                if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                // Daha hassas nokta-içinde kontrolü
+                if (((yi > y) !== (yj > y)) && 
+                    (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
                     inside = !inside;
                 }
             }
 
+            // Ek kontrol 1: Nokta polygon kenarında mı?
+            for (let i = 0; i < n; i++) {
+                const j = (i + 1) % n;
+                const xi = polygon[i].x, yi = polygon[i].y;
+                const xj = polygon[j].x, yj = polygon[j].y;
+                
+                // Nokta kenar üzerinde mi kontrol et
+                const dist = pointToLineDistance(x, y, xi, yi, xj, yj);
+                if (dist < 0.1) { // Kenar üzerindeki noktaları içeride say
+                    return true;
+                }
+            }
+
+            // Ek kontrol 2: Nokta polygon köşesinde mi?
+            for (let i = 0; i < n; i++) {
+                const px = polygon[i].x, py = polygon[i].y;
+                const distance = Math.sqrt((x - px) * (x - px) + (y - py) * (y - py));
+                if (distance < 0.1) { // Köşe noktalarını içeride say
+                    return true;
+                }
+            }
+
+            // Ek kontrol 3: Çok yakın noktalar için genişletilmiş kontrol
+            if (!inside) {
+                // Nokta çok yakınsa (0.5 birim içinde) daha detaylı kontrol yap
+                let minDistance = Infinity;
+                for (let i = 0; i < n; i++) {
+                    const j = (i + 1) % n;
+                    const dist = pointToLineDistance(x, y, polygon[i].x, polygon[i].y, polygon[j].x, polygon[j].y);
+                    minDistance = Math.min(minDistance, dist);
+                }
+                
+                if (minDistance < 0.5) {
+                    // Çoklu ray casting - farklı yönlerden kontrol et
+                    let insideCount = 0;
+                    const directions = [
+                        {dx: 1, dy: 0},    // Sağa
+                        {dx: 0, dy: 1},    // Yukarı
+                        {dx: 1, dy: 1},    // Çapraz
+                        {dx: -1, dy: 1}    // Ters çapraz
+                    ];
+                    
+                    for (let dir of directions) {
+                        let rayInside = false;
+                        for (let i = 0, j = n - 1; i < n; j = i++) {
+                            const xi = polygon[i].x, yi = polygon[i].y;
+                            const xj = polygon[j].x, yj = polygon[j].y;
+                            
+                            // Ray intersection test
+                            const rayEnd = {x: x + dir.dx * 1000, y: y + dir.dy * 1000};
+                            if (lineIntersect(x, y, rayEnd.x, rayEnd.y, xi, yi, xj, yj)) {
+                                rayInside = !rayInside;
+                            }
+                        }
+                        if (rayInside) insideCount++;
+                    }
+                    
+                    // Çoğunluk kuralı
+                    if (insideCount >= 2) {
+                        return true;
+                    }
+                }
+            }
+
             return inside;
+        }
+
+        // İki çizgi kesişim kontrolü
+        function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+            const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+            if (Math.abs(denom) < 1e-10) return false;
+            
+            const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+            const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denom;
+            
+            return t > 0 && t < 1 && u >= 0 && u <= 1;
+        }
+
+        // Nokta-çizgi arası mesafe hesaplama
+        function pointToLineDistance(px, py, x1, y1, x2, y2) {
+            const A = px - x1;
+            const B = py - y1;
+            const C = x2 - x1;
+            const D = y2 - y1;
+
+            const dot = A * C + B * D;
+            const lenSq = C * C + D * D;
+            
+            if (lenSq === 0) return Math.sqrt(A * A + B * B);
+            
+            let param = dot / lenSq;
+            
+            if (param < 0) {
+                return Math.sqrt(A * A + B * B);
+            } else if (param > 1) {
+                const dx = px - x2;
+                const dy = py - y2;
+                return Math.sqrt(dx * dx + dy * dy);
+            } else {
+                const dx = px - (x1 + param * C);
+                const dy = py - (y1 + param * D);
+                return Math.sqrt(dx * dx + dy * dy);
+            }
         }
 
         // Etkisiz nokta kontrolü
@@ -951,8 +1134,8 @@
             let redCount = 0;
             
             // Tüm grid'i tara ve aktif noktaları say (etkisiz olanları hariç tut)
-            for (let row = 0; row < 12; row++) {
-                for (let col = 0; col < 12; col++) {
+            for (let row = 0; row < 20; row++) {
+                for (let col = 0; col < 20; col++) {
                     // Etkisiz nokta kontrolü yap
                     if (!isPointDisabled(col, row, gameBoard[row][col])) {
                         if (gameBoard[row][col] === 1) {
@@ -1014,10 +1197,10 @@
         // SVG çizgi çiz
         function drawEnclosureLine(svg, points, color) {
             // Grid koordinatlarını SVG koordinatlarına çevir
-            // Grid yapısı: 30px nokta + 3px gap = 33px spacing, koyulan nokta merkezlerine göre 2.5 birim offset
+            // Grid yapısı: 25px nokta + 3px gap = 28px spacing, koyulan nokta merkezlerine göre offset
             const svgPoints = points.map(p => ({
-                x: p.x * 33 + 15 + (2.5 * 33), // 33px spacing + 15px nokta merkezi + 2.5 birim sağa
-                y: p.y * 33 + 15 + (2.5 * 33)  // 33px spacing + 15px nokta merkezi + 2.5 birim aşağı
+                x: p.x * 28 + 12.5, // 28px spacing + 12.5px nokta merkezi
+                y: p.y * 28 + 12.5  // 28px spacing + 12.5px nokta merkezi
             }));
 
             // Polygon oluştur
@@ -1085,7 +1268,7 @@
             allMoves = [];
             player1TotalPoints = 0; // Oyuncu toplam nokta sayılarını sıfırla
             player2TotalPoints = 0;
-            gameBoard = Array(12).fill().map(() => Array(12).fill(0));
+            gameBoard = Array(20).fill().map(() => Array(20).fill(0));
             gameEnded = false;
             disabledPoints = []; // Etkisiz noktaları sıfırla
             player1Score = 0; // Skorları sıfırla
@@ -1118,8 +1301,8 @@
             // Önce mevcut grid'i temizle
             gridContainer.innerHTML = '';
 
-            for (let row = 0; row < 12; row++) {
-                for (let col = 0; col < 12; col++) {
+            for (let row = 0; row < 20; row++) {
+                for (let col = 0; col < 20; col++) {
                     const point = document.createElement('div');
                     point.className = 'grid-point';
                     point.dataset.row = row;
@@ -1297,7 +1480,7 @@
             allMoves = [];
             player1TotalPoints = 0; // Oyuncu toplam nokta sayılarını sıfırla
             player2TotalPoints = 0;
-            gameBoard = Array(12).fill().map(() => Array(12).fill(0));
+            gameBoard = Array(20).fill().map(() => Array(20).fill(0));
             disabledPoints = [];
             enclosedPoints = [];
             
@@ -1793,10 +1976,10 @@
             const color = currentPlayer === 1 ? '#007bff' : '#dc3545';
             
             // Grid koordinatlarını SVG koordinatlarına çevir
-            // Grid yapısı: 30px nokta + 3px gap = 33px spacing, koyulan nokta merkezlerine göre 2.5 birim offset
+            // Grid yapısı: 25px nokta + 3px gap = 28px spacing, koyulan nokta merkezlerine göre offset
             const svgPoints = selectedPoints.map(p => ({
-                x: p.x * 33 + 15 + (2.5 * 33), // 33px spacing + 15px nokta merkezi + 2.5 birim sağa
-                y: p.y * 33 + 15 + (2.5 * 33)  // 33px spacing + 15px nokta merkezi + 2.5 birim aşağı
+                x: p.x * 28 + 12.5, // 28px spacing + 12.5px nokta merkezi
+                y: p.y * 28 + 12.5  // 28px spacing + 12.5px nokta merkezi
             }));
 
             // Polygon oluştur

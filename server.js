@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
             gameRooms[roomId] = {
                 players: [],
                 gameState: {
-                    grid: Array(15).fill().map(() => Array(15).fill(0)),
+                    grid: Array(20).fill().map(() => Array(20).fill(0)),
                     currentPlayer: 1,
                     gameStarted: false,
                     gameEnded: false,
@@ -179,7 +179,7 @@ function checkSurrounding(grid, row, col, playerId) {
         let y = row + dy;
 
         // Bu yönde ilerle (12x12 grid boyutu)
-        while (x >= 0 && x < 12 && y >= 0 && y < 12) {
+        while (x >= 0 && x < 20 && y >= 0 && y < 20) {
             if (grid[y][x] === playerId) {
                 // Kendi taşımıza ulaştık, çevreleme var
                 points.forEach(point => {
@@ -206,8 +206,8 @@ function checkSurrounding(grid, row, col, playerId) {
 // Kazanan kontrolü
 function checkWinner(grid) {
     // 5 taş sıralama kontrolü (yatay, dikey, çapraz)
-    for (let row = 0; row < 15; row++) {
-        for (let col = 0; col < 15; col++) {
+    for (let row = 0; row < 20; row++) {
+        for (let col = 0; col < 20; col++) {
             if (grid[row][col] !== 0) {
                 const player = grid[row][col];
                 
