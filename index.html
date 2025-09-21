@@ -294,6 +294,85 @@
             border-left: 4px solid #28a745;
         }
 
+        /* Manuel Çevreleme Buton Stilleri */
+        .control-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .enclosure-btn {
+            background: linear-gradient(145deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .enclosure-btn:hover {
+            background: linear-gradient(145deg, #20c997, #28a745);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .pass-btn {
+            background: linear-gradient(145deg, #6c757d, #495057);
+            color: white;
+        }
+
+        .pass-btn:hover {
+            background: linear-gradient(145deg, #495057, #6c757d);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        .finish-btn {
+            background: linear-gradient(145deg, #007bff, #0056b3);
+            color: white;
+        }
+
+        .finish-btn:hover {
+            background: linear-gradient(145deg, #0056b3, #007bff);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .cancel-btn {
+            background: linear-gradient(145deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .cancel-btn:hover {
+            background: linear-gradient(145deg, #c82333, #dc3545);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Seçili nokta stilleri */
+        .grid-point.selected {
+            background: linear-gradient(145deg, #ffc107, #e0a800);
+            border-color: #d39e00;
+            box-shadow: 
+                0 4px 12px rgba(255, 193, 7, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
         /* Gereksiz win message CSS'leri kaldırıldı */
     </style>
 </head>
@@ -317,6 +396,40 @@
         <div class="left-panel">
             <div class="current-player">
                 Sıra: <span id="current-player-text" class="player-blue">Oyuncu 1 (Mavi)</span>
+            </div>
+
+            <!-- Manuel Çevreleme Kontrolleri -->
+            <div id="manual-enclosure-controls" class="manual-controls" style="display: none; margin: 15px 0; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 10px; border: 2px solid rgba(0,0,0,0.1);">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <strong style="color: #2c3e50;">Hamle Seçenekleri:</strong>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button id="start-enclosure-btn" class="control-btn enclosure-btn" onclick="startManualEnclosure()">
+                        🔄 Çevrele
+                    </button>
+                    <button id="pass-turn-btn" class="control-btn pass-btn" onclick="passTurn()">
+                        ⏭️ Sıra Rakipte
+                    </button>
+                </div>
+            </div>
+
+            <!-- Çevreleme Modu Kontrolleri -->
+            <div id="enclosure-mode-controls" class="enclosure-mode" style="display: none; margin: 15px 0; padding: 15px; background: rgba(255,193,7,0.1); border-radius: 10px; border: 2px solid #ffc107;">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <strong style="color: #856404;">Çevreleme Modu Aktif</strong>
+                    <div style="font-size: 12px; color: #856404; margin-top: 5px;">Çevreleme için noktaları seçin</div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button id="finish-enclosure-btn" class="control-btn finish-btn" onclick="finishManualEnclosure()">
+                        ✅ Çevrelemeyi Bitir
+                    </button>
+                    <button id="cancel-enclosure-btn" class="control-btn cancel-btn" onclick="cancelManualEnclosure()">
+                        ❌ İptal Et
+                    </button>
+                </div>
+                <div id="selected-points-info" style="margin-top: 10px; font-size: 11px; color: #856404;">
+                    Seçilen nokta: 0
+                </div>
             </div>
 
             <div class="coordinates">
@@ -344,10 +457,7 @@
         <div class="right-panel">
             <div class="right-top">
                 <div class="coordinates">
-                    <strong>Toplam Kontrol Sayısı:</strong>
-                    <div id="total-checks" style="font-size: 14px; color: #2c3e50; margin-top: 5px;">0</div>
-                    
-                    <strong style="margin-top: 15px; display: block;">Aktif Nokta Sayıları:</strong>
+                    <strong>Aktif Nokta Sayıları:</strong>
                     <div style="margin-top: 5px;">
                         <div id="blue-points-count" style="font-size: 14px; color: #3498db; margin-top: 3px;">🔵 Mavi: 0</div>
                         <div id="red-points-count" style="font-size: 14px; color: #e74c3c; margin-top: 3px;">🔴 Kırmızı: 0</div>
@@ -370,6 +480,8 @@
         let currentPlayer = 1; // 1 = Mavi (Oyuncu 1), 2 = Kırmızı (Oyuncu 2)
         let moveCount = 0;
         let allMoves = [];
+        let player1TotalPoints = 0; // Oyuncu 1'in toplam koyduğu nokta sayısı
+        let player2TotalPoints = 0; // Oyuncu 2'nin toplam koyduğu nokta sayısı
         let gameBoard = Array(12).fill().map(() => Array(12).fill(0)); // 0: boş, 1: mavi, 2: kırmızı
         let gameEnded = false;
         let disabledPoints = []; // Etkisiz nokta listesi {x, y, player}
@@ -971,6 +1083,8 @@
             currentPlayer = 1;
             moveCount = 0;
             allMoves = [];
+            player1TotalPoints = 0; // Oyuncu toplam nokta sayılarını sıfırla
+            player2TotalPoints = 0;
             gameBoard = Array(12).fill().map(() => Array(12).fill(0));
             gameEnded = false;
             disabledPoints = []; // Etkisiz noktaları sıfırla
@@ -1025,6 +1139,37 @@
                 return;
             }
 
+            // Manuel çevreleme modundaysa nokta seçme işlemi yap
+            if (manualEnclosureMode) {
+                handleEnclosurePointSelection(point);
+                return;
+            }
+
+            // Aynı oyuncunun ard arda nokta koymasını engelle - Son hamle kontrolü
+            if (allMoves.length > 0) {
+                const lastMove = allMoves[allMoves.length - 1];
+                const currentPlayerName = currentPlayer === 1 ? 'Oyuncu 1' : 'Oyuncu 2';
+                if (lastMove.includes(currentPlayerName)) {
+                    alert('Aynı oyuncu ard arda nokta koyamaz! Önce diğer oyuncunun sırası gelmelidir.');
+                    return;
+                }
+            }
+
+            // Aynı oyuncunun ard arda nokta koymasını engelle - Toplam nokta sayısı kontrolü
+            const currentPlayerTotalPoints = currentPlayer === 1 ? player1TotalPoints : player2TotalPoints;
+            const otherPlayerTotalPoints = currentPlayer === 1 ? player2TotalPoints : player1TotalPoints;
+            
+            if (currentPlayerTotalPoints > otherPlayerTotalPoints) {
+                alert('Aynı oyuncu ard arda nokta koyamaz! Önce diğer oyuncunun sırası gelmelidir.');
+                return;
+            }
+
+            // Oyuncu seçim yapması bekleniyorsa nokta koymasını engelle
+            if (waitingForPlayerAction) {
+                alert('Önce "Çevreleme Yap" veya "Sıra Rakipte" seçeneklerinden birini seçmelisiniz!');
+                return;
+            }
+
             // Eğer nokta zaten doldurulmuşsa, tıklamayı ignore et
             if (point.classList.contains('filled')) {
                 return;
@@ -1051,6 +1196,16 @@
 
             // Game board'u güncelle
             gameBoard[row][col] = currentPlayer;
+
+            // Oyuncu toplam nokta sayısını güncelle
+            if (currentPlayer === 1) {
+                player1TotalPoints++;
+            } else {
+                player2TotalPoints++;
+            }
+
+            // Koordinatları kaydet
+            lastMoveCoordinates = { x: col, y: row };
 
             // Koordinatları kaydet ve göster
             const coordinates = `x: ${col}, y: ${row}`;
@@ -1084,6 +1239,18 @@
             // En son hamleyi görünür yap
             allMovesDiv.scrollTop = allMovesDiv.scrollHeight;
 
+            // Sıra değişimi yapma - oyuncu seçim yapana kadar aynı oyuncu kalacak
+            // currentPlayer = currentPlayer === 1 ? 2 : 1;
+            // updateCurrentPlayerDisplay();
+
+            // Oyuncunun seçim yapmasını bekle
+            waitingForPlayerAction = true;
+
+            // Manuel çevreleme seçeneklerini göster
+            showMoveOptions();
+
+            // Otomatik çevreleme kontrolünü kaldır - artık manuel yapılacak
+            /*
             // Çevreleme kontrolü yap - oyun bitmez, sadece gösterim
             const playerForEnclosure = currentPlayer; // Sıra değişmeden önce oyuncuyu kaydet
             setTimeout(async () => {
@@ -1116,6 +1283,7 @@
                 currentPlayerText.textContent = 'Oyuncu 2 (Kırmızı)';
                 currentPlayerText.className = 'player-red';
             }
+            */
         }
 
         // Yeni oyun başlatma fonksiyonu
@@ -1127,6 +1295,8 @@
             player2Score = 0;
             moveCount = 0;
             allMoves = [];
+            player1TotalPoints = 0; // Oyuncu toplam nokta sayılarını sıfırla
+            player2TotalPoints = 0;
             gameBoard = Array(12).fill().map(() => Array(12).fill(0));
             disabledPoints = [];
             enclosedPoints = [];
@@ -1197,6 +1367,451 @@
             const winMessage = document.querySelector('.win-message');
             if (overlay) overlay.remove();
             if (winMessage) winMessage.remove();
+        }
+
+        // Manuel çevreleme sistemi değişkenleri
+        let manualEnclosureMode = false;
+        let selectedPointsForEnclosure = [];
+        let lastMoveCoordinates = null;
+        let waitingForPlayerAction = false; // Oyuncunun seçim yapmasını bekliyor mu?
+
+        // Oyuncu hamle yaptıktan sonra seçenekleri göster
+        function showMoveOptions() {
+            const manualControls = document.getElementById('manual-enclosure-controls');
+            manualControls.style.display = 'block';
+        }
+
+        // Seçenekleri gizle
+        function hideMoveOptions() {
+            const manualControls = document.getElementById('manual-enclosure-controls');
+            manualControls.style.display = 'none';
+        }
+
+        // Manuel çevreleme başlat
+        function startManualEnclosure() {
+            waitingForPlayerAction = false; // Seçim yapıldı
+            manualEnclosureMode = true;
+            selectedPointsForEnclosure = [];
+            
+            // Kontrol panellerini değiştir
+            hideMoveOptions();
+            const enclosureModeControls = document.getElementById('enclosure-mode-controls');
+            enclosureModeControls.style.display = 'block';
+            
+            // Bilgi güncelle
+            updateSelectedPointsInfo();
+            
+            // Kullanıcıya bilgi ver
+            console.log('Manuel çevreleme modu başlatıldı. Çevreleme için noktaları seçin.');
+        }
+
+        // Sırayı rakibe geç
+        function passTurn() {
+            waitingForPlayerAction = false; // Seçim yapıldı
+            hideMoveOptions();
+            
+            // Sıra değişimi
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            
+            // Oyuncu bilgisini güncelle
+            updateCurrentPlayerDisplay();
+            
+            console.log(`Sıra ${currentPlayer}. oyuncuya geçti.`);
+        }
+
+        // Manuel çevreleme bitir
+        function finishManualEnclosure() {
+            if (selectedPointsForEnclosure.length < 4) {
+                alert('Çevreleme için en az 4 nokta seçmelisiniz!');
+                return;
+            }
+            
+            // Çevreleme doğrulaması yap
+            const isValidEnclosure = validateManualEnclosure(selectedPointsForEnclosure);
+            
+            if (isValidEnclosure) {
+                // Geçerli çevreleme - puan ver ve sırayı değiştir
+                processValidEnclosure(selectedPointsForEnclosure);
+                resetManualEnclosureMode();
+                
+                // Sıra değişimi
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+                updateCurrentPlayerDisplay();
+                
+                console.log('Geçerli çevreleme! Puan alındı ve sıra değişti.');
+            } else {
+                // Geçersiz çevreleme - seçili noktaları temizle ve tekrar seçenek sun
+                alert('Geçersiz çevreleme! Kurallara uygun bir çevreleme yapmalısınız.');
+                resetManualEnclosureMode();
+                showMoveOptions(); // Tekrar seçenek sun
+            }
+        }
+
+        // Manuel çevreleme iptal et
+        function cancelManualEnclosure() {
+            resetManualEnclosureMode();
+            // Çevreleme iptal edildiğinde sırayı karşı oyuncuya geç
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updateCurrentPlayerDisplay();
+            waitingForPlayerAction = false; // Yeni oyuncu nokta koyabilir
+        }
+
+        // Manuel çevreleme modunu sıfırla
+        function resetManualEnclosureMode() {
+            manualEnclosureMode = false;
+            
+            // Seçili noktaların sarı rengini kaldır ve orijinal renklerine döndür
+            selectedPointsForEnclosure.forEach(coord => {
+                const point = document.querySelector(`[data-row="${coord.y}"][data-col="${coord.x}"]`);
+                if (point) {
+                    point.classList.remove('selected');
+                    // Orijinal rengi geri yükle - inline stilleri temizle
+                    point.style.background = '';
+                    point.style.borderColor = '';
+                    point.style.boxShadow = '';
+                    point.style.animation = '';
+                }
+            });
+            selectedPointsForEnclosure = [];
+            
+            // Kontrol panellerini gizle
+            const enclosureModeControls = document.getElementById('enclosure-mode-controls');
+            enclosureModeControls.style.display = 'none';
+        }
+
+        // Seçilen nokta bilgisini güncelle
+        function updateSelectedPointsInfo() {
+            const info = document.getElementById('selected-points-info');
+            info.textContent = `Seçilen nokta: ${selectedPointsForEnclosure.length}`;
+        }
+
+        // Oyuncu bilgisini güncelle
+        function updateCurrentPlayerDisplay() {
+            const currentPlayerText = document.getElementById('current-player-text');
+            if (currentPlayer === 1) {
+                currentPlayerText.textContent = 'Oyuncu 1 (Mavi)';
+                currentPlayerText.className = 'player-blue';
+            } else {
+                currentPlayerText.textContent = 'Oyuncu 2 (Kırmızı)';
+                currentPlayerText.className = 'player-red';
+            }
+        }
+
+        // Çevreleme modunda nokta seçme işlemi
+        function handleEnclosurePointSelection(point) {
+            const row = parseInt(point.dataset.row);
+            const col = parseInt(point.dataset.col);
+            
+            // Etkisiz noktaları seçmeyi engelle
+            if (point.classList.contains('disabled')) {
+                alert('Etkisiz noktaları seçemezsiniz!');
+                return;
+            }
+            
+            // Sadece dolu noktaları seçebilir
+            if (!point.classList.contains('filled')) {
+                alert('Çevreleme için sadece dolu noktaları seçebilirsiniz!');
+                return;
+            }
+            
+            // Sadece kendi rengindeki noktaları seçebilir
+            const isCurrentPlayerPoint = (currentPlayer === 1 && point.classList.contains('blue')) ||
+                                        (currentPlayer === 2 && point.classList.contains('red'));
+            
+            if (!isCurrentPlayerPoint) {
+                alert('Sadece kendi renginizdeki noktaları seçebilirsiniz!');
+                return;
+            }
+            
+            const coord = { x: col, y: row };
+            const coordIndex = selectedPointsForEnclosure.findIndex(p => p.x === coord.x && p.y === coord.y);
+            
+            if (coordIndex === -1) {
+                // Nokta seçili değil, seç
+                selectedPointsForEnclosure.push(coord);
+                point.classList.add('selected');
+            } else {
+                // Nokta zaten seçili, seçimi kaldır
+                selectedPointsForEnclosure.splice(coordIndex, 1);
+                point.classList.remove('selected');
+            }
+            
+            updateSelectedPointsInfo();
+        }
+
+        // Manuel çevreleme doğrulama algoritması
+        function validateManualEnclosure(selectedPoints) {
+            if (selectedPoints.length < 4) {
+                return false;
+            }
+            
+            // Seçilen noktaların bağlantılı olup olmadığını kontrol et
+            if (!arePointsConnected(selectedPoints)) {
+                return false;
+            }
+            
+            // Kapalı bir şekil oluşturup oluşturmadığını kontrol et
+            if (!formsClosedShape(selectedPoints)) {
+                return false;
+            }
+            
+            // Çevrelenen alanın içinde rakip noktalar olup olmadığını kontrol et
+            const enclosedPoints = getEnclosedPoints(selectedPoints);
+            if (enclosedPoints.length === 0) {
+                return false;
+            }
+            
+            // Çevrelenen noktaların rakibe ait olup olmadığını kontrol et
+            const opponentPlayer = currentPlayer === 1 ? 2 : 1;
+            const hasOpponentPoints = enclosedPoints.some(point => 
+                gameBoard[point.y] && gameBoard[point.y][point.x] === opponentPlayer
+            );
+            
+            return hasOpponentPoints;
+        }
+
+        // Noktaların bağlantılı olup olmadığını kontrol et
+        function arePointsConnected(points) {
+            if (points.length < 2) return false;
+            
+            // Her nokta en az bir diğer noktaya komşu olmalı
+            for (let i = 0; i < points.length; i++) {
+                let hasNeighbor = false;
+                for (let j = 0; j < points.length; j++) {
+                    if (i !== j && areNeighbors(points[i], points[j])) {
+                        hasNeighbor = true;
+                        break;
+                    }
+                }
+                if (!hasNeighbor) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // İki noktanın komşu olup olmadığını kontrol et
+        function areNeighbors(point1, point2) {
+            const dx = Math.abs(point1.x - point2.x);
+            const dy = Math.abs(point1.y - point2.y);
+            
+            // Dikey, yatay veya çapraz komşuluk
+            return (dx <= 1 && dy <= 1) && !(dx === 0 && dy === 0);
+        }
+
+        // Kapalı şekil oluşturup oluşturmadığını kontrol et
+        function formsClosedShape(points) {
+            if (points.length < 4) return false;
+            
+            // Noktaları sıralayarak bir döngü oluşturup oluşturmadığını kontrol et
+            // Her nokta en az 2 komşuya sahip olmalı (kapalı şekil için)
+            for (let i = 0; i < points.length; i++) {
+                let neighborCount = 0;
+                for (let j = 0; j < points.length; j++) {
+                    if (i !== j && areNeighbors(points[i], points[j])) {
+                        neighborCount++;
+                    }
+                }
+                // Kapalı şekilde her nokta en az 2 komşuya sahip olmalı
+                if (neighborCount < 2) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // Çevrelenen noktaları bul
+        function getEnclosedPoints(boundaryPoints) {
+            const enclosedPoints = [];
+            
+            // Sınır noktalarının oluşturduğu alanı bul
+            const minX = Math.min(...boundaryPoints.map(p => p.x));
+            const maxX = Math.max(...boundaryPoints.map(p => p.x));
+            const minY = Math.min(...boundaryPoints.map(p => p.y));
+            const maxY = Math.max(...boundaryPoints.map(p => p.y));
+            
+            // Sınır içindeki her noktayı kontrol et
+            for (let y = minY; y <= maxY; y++) {
+                for (let x = minX; x <= maxX; x++) {
+                    const point = { x, y };
+                    
+                    // Sınır noktası değilse ve içeride ise ekle
+                    if (!boundaryPoints.some(bp => bp.x === x && bp.y === y)) {
+                        // Polygon kontrolü için daha güvenilir bir yöntem kullan
+                        if (isPointStrictlyInsidePolygon(point, boundaryPoints)) {
+                            enclosedPoints.push(point);
+                        }
+                    }
+                }
+            }
+            
+            return enclosedPoints;
+        }
+
+        // Daha güvenilir nokta içinde kalma kontrolü
+        function isPointStrictlyInsidePolygon(point, polygon) {
+            let inside = false;
+            const x = point.x, y = point.y;
+            
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const xi = polygon[i].x, yi = polygon[i].y;
+                const xj = polygon[j].x, yj = polygon[j].y;
+                
+                // Ray casting algoritması - daha hassas kontrol
+                if (((yi > y) !== (yj > y)) &&
+                    (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            
+            // Ek kontrol: Nokta sınır üzerinde mi?
+            // Eğer nokta tam sınır üzerindeyse içeride sayma
+            for (let i = 0; i < polygon.length; i++) {
+                const p1 = polygon[i];
+                const p2 = polygon[(i + 1) % polygon.length];
+                
+                // Nokta kenar üzerinde mi kontrol et
+                if (isPointOnLineSegment(point, p1, p2)) {
+                    return false; // Sınır üzerindeki noktalar içeride sayılmaz
+                }
+            }
+            
+            return inside;
+        }
+
+        // Noktanın çizgi parçası üzerinde olup olmadığını kontrol et
+        function isPointOnLineSegment(point, lineStart, lineEnd) {
+            const epsilon = 0.001; // Hassasiyet toleransı
+            
+            // Nokta ile çizgi uçları arasındaki mesafelerin toplamı
+            // çizgi uzunluğuna eşitse nokta çizgi üzerindedir
+            const d1 = Math.sqrt(Math.pow(point.x - lineStart.x, 2) + Math.pow(point.y - lineStart.y, 2));
+            const d2 = Math.sqrt(Math.pow(point.x - lineEnd.x, 2) + Math.pow(point.y - lineEnd.y, 2));
+            const lineLength = Math.sqrt(Math.pow(lineEnd.x - lineStart.x, 2) + Math.pow(lineEnd.y - lineStart.y, 2));
+            
+            return Math.abs(d1 + d2 - lineLength) < epsilon;
+        }
+
+        // Bir noktanın polygon içinde olup olmadığını kontrol et (Ray casting algoritması)
+        function isPointInsidePolygon(point, polygon) {
+            let inside = false;
+            
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const xi = polygon[i].x, yi = polygon[i].y;
+                const xj = polygon[j].x, yj = polygon[j].y;
+                
+                if (((yi > point.y) !== (yj > point.y)) &&
+                    (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            
+            return inside;
+        }
+
+        // Geçerli çevreleme işlemi
+        function processValidEnclosure(selectedPoints) {
+            const enclosedPoints = getEnclosedPoints(selectedPoints);
+            const opponentPlayer = currentPlayer === 1 ? 2 : 1;
+            
+            // Puan hesapla
+            let score = 0;
+            enclosedPoints.forEach(point => {
+                if (gameBoard[point.y] && gameBoard[point.y][point.x] === opponentPlayer) {
+                    // Etkisiz nokta kontrolü - etkisiz noktalar skora katkı yapmasın
+                    const isAlreadyDisabled = disabledPoints.some(dp => 
+                        dp.x === point.x && dp.y === point.y && dp.player === opponentPlayer
+                    );
+                    
+                    if (!isAlreadyDisabled) {
+                        score++;
+                        
+                        // Çevrelenen rakip noktasını etkisiz hale getir
+                        const pointElement = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
+                        if (pointElement) {
+                            pointElement.classList.add('disabled');
+                        }
+                        
+                        // Etkisiz noktalar listesine ekle
+                        disabledPoints.push({ x: point.x, y: point.y, player: opponentPlayer });
+                    }
+                }
+                
+                // Çevrelenen alandaki boş noktaları da etkisiz hale getir
+                else if (gameBoard[point.y] && gameBoard[point.y][point.x] === 0) {
+                    // Boş nokta etkisiz kontrolü
+                    const isAlreadyDisabled = disabledPoints.some(dp => 
+                        dp.x === point.x && dp.y === point.y && dp.player === 0
+                    );
+                    
+                    if (!isAlreadyDisabled) {
+                        const pointElement = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
+                        if (pointElement) {
+                            pointElement.classList.add('disabled');
+                            pointElement.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                            pointElement.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
+                            pointElement.style.cursor = 'not-allowed';
+                        }
+                        
+                        // Etkisiz noktalar listesine ekle (player: 0 = boş nokta)
+                        disabledPoints.push({ x: point.x, y: point.y, player: 0 });
+                    }
+                }
+            });
+            
+            // Skoru güncelle
+            if (currentPlayer === 1) {
+                player1Score += score;
+                document.getElementById('player1-score').textContent = player1Score;
+            } else {
+                player2Score += score;
+                document.getElementById('player2-score').textContent = player2Score;
+            }
+            
+            // Çevreleme çizgisini göster
+            drawManualEnclosureLine(selectedPoints);
+            
+            // Aktif nokta sayılarını güncelle
+            updateActivePointCounts();
+            updateDisabledPointsDisplay();
+            
+            console.log(`Çevreleme başarılı! ${score} puan alındı.`);
+        }
+
+        // Manuel çevreleme çizgisi çiz
+        function drawManualEnclosureLine(selectedPoints) {
+            const svg = document.getElementById('enclosureSvg'); // Doğru ID kullan
+            
+            if (!svg) {
+                console.error('SVG elementi bulunamadı!');
+                return;
+            }
+            
+            // Oyuncu rengini belirle
+            const color = currentPlayer === 1 ? '#007bff' : '#dc3545';
+            
+            // Grid koordinatlarını SVG koordinatlarına çevir
+            // Grid yapısı: 30px nokta + 3px gap = 33px spacing, koyulan nokta merkezlerine göre 2.5 birim offset
+            const svgPoints = selectedPoints.map(p => ({
+                x: p.x * 33 + 15 + (2.5 * 33), // 33px spacing + 15px nokta merkezi + 2.5 birim sağa
+                y: p.y * 33 + 15 + (2.5 * 33)  // 33px spacing + 15px nokta merkezi + 2.5 birim aşağı
+            }));
+
+            // Polygon oluştur
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            const pointsStr = svgPoints.map(p => `${p.x},${p.y}`).join(' ');
+
+            polygon.setAttribute('points', pointsStr);
+            polygon.setAttribute('stroke', color);
+            polygon.setAttribute('stroke-width', '3');
+            polygon.setAttribute('fill', 'none');
+            polygon.setAttribute('opacity', '0.8');
+            polygon.setAttribute('stroke-dasharray', '5,5'); // Kesikli çizgi
+            polygon.setAttribute('class', 'enclosure-line');
+
+            svg.appendChild(polygon);
         }
 
         // Sayfa yüklendiğinde grid'i oluştur
