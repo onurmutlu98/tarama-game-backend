@@ -445,32 +445,29 @@
 
         // Yeni kombinasyon tabanlı çevreleme algoritması
 
-        // Ultra-optimized kombinasyon oluşturucu - memory pool kullanımı
+        // Optimized kombinasyon oluşturucu - performans için sınırlı
         function generateCombinations(points, size) {
             const combinations = [];
-            const maxCombinations = 100000;
-            const combo = new Array(size); // Pre-allocated array
-            
-            function combine(start, depth) {
+            const maxCombinations = 50000; // Maksimum kombinasyon sayısını daha da artır
+
+            function combine(start, combo) {
                 if (combinations.length >= maxCombinations) {
                     return; // Erken çıkış - performans için
                 }
 
-                if (depth === size) {
-                    // Array kopyalama yerine slice kullan - daha hızlı
-                    combinations.push(combo.slice(0, size));
+                if (combo.length === size) {
+                    combinations.push([...combo]);
                     return;
                 }
 
-                // Loop unrolling için optimizasyon
-                const maxI = Math.min(points.length, start + (size - depth) * 2);
-                for (let i = start; i < maxI && combinations.length < maxCombinations; i++) {
-                    combo[depth] = points[i];
-                    combine(i + 1, depth + 1);
+                for (let i = start; i < points.length && combinations.length < maxCombinations; i++) {
+                    combo.push(points[i]);
+                    combine(i + 1, combo);
+                    combo.pop();
                 }
             }
 
-            combine(0, 0);
+            combine(0, []);
             return combinations;
         }
 
@@ -523,7 +520,7 @@
             console.log(`Oyuncu ${player} nokta sayısı: ${playerPoints.length}`);
 
             // Maksimum çevreleme nokta sayısı artırıldı
-            const maxSize = Math.min(30, playerPoints.length); // Maksimum 30 nokta ile çevreleme
+            const maxSize = Math.min(20, playerPoints.length); // Maksimum 20 nokta ile çevreleme
             let totalChecked = 0;
             
             // Maksimum arttırılmış kombinasyon sınırları - ultra yüksek performans
@@ -537,16 +534,14 @@
                 maxTotalChecks = 8000000;  // Çok nokta = ultra yüksek kontrol (4M → 8M)
             } else if (pointCount <= 20) {
                 maxTotalChecks = 6000000;   // 20 nokta = ultra yüksek kontrol (3.2M → 6M)
-            } else if (pointCount <= 25) {
-                maxTotalChecks = 5000000;   // 25 nokta = yüksek kontrol (yeni)
             } else {
-                maxTotalChecks = 4000000;   // 30 nokta = yüksek kontrol (2M → 4M)
+                maxTotalChecks = 4000000;   // Maksimum nokta = çok yüksek kontrol (2M → 4M)
             }
 
             console.log(`Maksimum kontrol sayısı: ${maxTotalChecks}`);
 
-            // Genişletilmiş öncelikli boyutlar - 30 nokta için optimize edildi
-            const prioritySizes = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]; // 30 nokta için genişletildi
+            // Genişletilmiş öncelikli boyutlar - 20 nokta için optimize edildi
+            const prioritySizes = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]; // 20 nokta için genişletildi
             const remainingSizes = [];
             
             for (let size = 4; size <= maxSize; size++) {
@@ -579,9 +574,8 @@
                 
                 totalChecked += combinations.length;
 
-                // Ultra-optimized batch processing - adaptive batch size
-                let batchSize = Math.min(2000, Math.max(500, Math.floor(combinations.length / 10))); // Adaptive batch size
-                
+                // 12x12 için optimize edilmiş batch size - performans odaklı
+                const batchSize = 1000; // 2000'den 1000'e düşürüldü - 12x12 için optimize
                 for (let i = 0; i < combinations.length; i += batchSize) {
                     // Her batch'te limit kontrolü
                     if (totalChecked >= maxTotalChecks) {
@@ -591,91 +585,74 @@
                     
                     const batch = combinations.slice(i, i + batchSize);
                     
-                    // Batch içinde paralel işlem simülasyonu - chunk processing
-                    const chunkSize = Math.min(100, batch.length);
-                    for (let j = 0; j < batch.length; j += chunkSize) {
-                        const chunk = batch.slice(j, j + chunkSize);
-                        
-                        for (let combo of chunk) {
-                            // Kombinasyon seviyesinde erken çıkış kontrolü
+                    for (let combo of batch) {
+                        // Kombinasyon seviyesinde erken çıkış kontrolü
 
-                            // Noktaları sırala (konveks hull benzeri)
-                            const sortedCombo = sortPointsClockwise(combo);
+                        // Noktaları sırala (konveks hull benzeri)
+                        const sortedCombo = sortPointsClockwise(combo);
 
-                            if (isClosedShape(sortedCombo)) {
-                                console.log(`Kapalı şekil bulundu! ${size} noktalı kombinasyon`);
-                                // Çevrelenen rakip noktalarını say
-                                let newEnclosedCount = 0;
-                                const newEnclosedOpponents = [];
-                                const allEnclosedOpponents = [];
+                        if (isClosedShape(sortedCombo)) {
+                            console.log(`Kapalı şekil bulundu! ${size} noktalı kombinasyon`);
+                            // Çevrelenen rakip noktalarını say
+                            let newEnclosedCount = 0;
+                            const newEnclosedOpponents = [];
+                            const allEnclosedOpponents = [];
 
-                                for (let opPoint of opponentPoints) {
-                                    if (isPointInPolygon(opPoint.x, opPoint.y, sortedCombo)) {
-                                        allEnclosedOpponents.push(opPoint);
+                            for (let opPoint of opponentPoints) {
+                                if (isPointInPolygon(opPoint.x, opPoint.y, sortedCombo)) {
+                                    allEnclosedOpponents.push(opPoint);
 
-                                        // Bu nokta daha önce çevrelendi mi kontrol et (global enclosedPoints kullan)
-                                        const alreadyEnclosed = enclosedPoints.some(ep =>
-                                            ep.x === opPoint.x && ep.y === opPoint.y && ep.player === opPoint.player
-                                        );
+                                    // Bu nokta daha önce çevrelendi mi kontrol et (global enclosedPoints kullan)
+                                    const alreadyEnclosed = enclosedPoints.some(ep =>
+                                        ep.x === opPoint.x && ep.y === opPoint.y && ep.player === opPoint.player
+                                    );
 
-                                        if (!alreadyEnclosed) {
-                                            newEnclosedCount++;
-                                            newEnclosedOpponents.push(opPoint);
-                                            // Global çevrelenmiş noktalar listesine ekle
-                                            enclosedPoints.push({x: opPoint.x, y: opPoint.y, player: opPoint.player});
-                                        }
+                                    if (!alreadyEnclosed) {
+                                        newEnclosedCount++;
+                                        newEnclosedOpponents.push(opPoint);
+                                        // Global çevrelenmiş noktalar listesine ekle
+                                        enclosedPoints.push({x: opPoint.x, y: opPoint.y, player: opPoint.player});
                                     }
-                                }
-
-                                console.log(`Çevrelenen rakip nokta sayısı: ${allEnclosedOpponents.length} (yeni: ${newEnclosedCount})`);
-
-                                // Eğer yeni rakip noktası çevrelendiyse puan ver
-                                if (allEnclosedOpponents.length > 0) {
-                                    console.log(`ÇEVRELEMEBULUNDu! Oyuncu ${player} - ${size} noktalı çevreleme`);
-                                    
-                                    // Ses efektini sadece YENİ çevreleme yapıldığında çal
-                                    if (newEnclosedCount > 0) {
-                                        playEnclosureSound();
-                                    }
-                                    
-                                    if (player === 1) {
-                                        player1Score += newEnclosedCount;
-                                    } else {
-                                        player2Score += newEnclosedCount;
-                                    }
-
-                                    foundEnclosures.push({
-                                        points: sortedCombo,
-                                        player: player,
-                                        size: size,
-                                        enclosedCount: newEnclosedCount,
-                                        totalEnclosedCount: allEnclosedOpponents.length,
-                                        newEnclosedOpponents: newEnclosedOpponents,
-                                        allEnclosedOpponents: allEnclosedOpponents
-                                    });
-                                    console.log(`Çevreleme eklendi! Toplam bulunan çevreleme: ${foundEnclosures.length}`);
                                 }
                             }
-                        }
-                        
-                        // Micro-yield for better responsiveness
-                        if (j % (chunkSize * 5) === 0) {
-                            await new Promise(resolve => setTimeout(resolve, 0));
-                        }
-                    }
 
-                    // Batch sonrası kontrol
-                    if (totalChecked >= maxTotalChecks) {
-                        console.log(`Toplam limit aşıldı: ${totalChecked}`);
-                        break;
+                            console.log(`Çevrelenen rakip nokta sayısı: ${allEnclosedOpponents.length} (yeni: ${newEnclosedCount})`);
+
+                            // Eğer yeni rakip noktası çevrelendiyse puan ver
+                            if (allEnclosedOpponents.length > 0) {
+                                console.log(`ÇEVRELEMEBULUNDu! Oyuncu ${player} - ${size} noktalı çevreleme`);
+                                
+                                // Ses efektini sadece YENİ çevreleme yapıldığında çal
+                                if (newEnclosedCount > 0) {
+                                    playEnclosureSound();
+                                }
+                                
+                                if (player === 1) {
+                                    player1Score += newEnclosedCount;
+                                } else {
+                                    player2Score += newEnclosedCount;
+                                }
+
+                                foundEnclosures.push({
+                                    points: sortedCombo,
+                                    player: player,
+                                    size: size,
+                                    enclosedCount: newEnclosedCount,
+                                    totalEnclosedCount: allEnclosedOpponents.length,
+                                    newEnclosedOpponents: newEnclosedOpponents,
+                                    allEnclosedOpponents: allEnclosedOpponents
+                                });
+                                console.log(`Çevreleme eklendi! Toplam bulunan çevreleme: ${foundEnclosures.length}`);
+                            }
+                        }
                     }
+                    
+                    // Batch arası gecikmeyi kaldırdık - maksimum hız için
+                    // if (i + batchSize < combinations.length) {
+                    //     await new Promise(resolve => setTimeout(resolve, 1));
+                    // }
                 }
             }
-            
-            // Batch arası gecikmeyi kaldırdık - maksimum hız için
-            // if (i + batchSize < combinations.length) {
-            //     await new Promise(resolve => setTimeout(resolve, 1));
-            // }
 
             // Toplam kontrol sayısını ekranda göster
             document.getElementById('total-checks').textContent = totalChecked;
@@ -716,36 +693,10 @@
             return enclosedPoints;
         }
 
-        // Ultra-optimized Point-in-Polygon algoritması (Ray Casting) - cache ve bounding box
-        const polygonCache = new Map(); // Polygon sonuçlarını cache'le
-        
+        // Point-in-Polygon algoritması (Ray Casting)
         function isPointInPolygon(x, y, polygon) {
-            // Cache key oluştur
-            const cacheKey = `${x},${y},${polygon.map(p => `${p.x},${p.y}`).join('|')}`;
-            if (polygonCache.has(cacheKey)) {
-                return polygonCache.get(cacheKey);
-            }
-
-            // Bounding box kontrolü - hızlı eliminasyon
-            let minX = polygon[0].x, maxX = polygon[0].x;
-            let minY = polygon[0].y, maxY = polygon[0].y;
-            
-            for (let i = 1; i < polygon.length; i++) {
-                const px = polygon[i].x, py = polygon[i].y;
-                if (px < minX) minX = px;
-                else if (px > maxX) maxX = px;
-                if (py < minY) minY = py;
-                else if (py > maxY) maxY = py;
-            }
-            
-            // Bounding box dışındaysa hızlıca false döndür
-            if (x < minX || x > maxX || y < minY || y > maxY) {
-                polygonCache.set(cacheKey, false);
-                return false;
-            }
-
-            // Ray casting algoritması - optimized
             let inside = false;
+
             for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
                 const xi = polygon[i].x, yi = polygon[i].y;
                 const xj = polygon[j].x, yj = polygon[j].y;
@@ -755,11 +706,6 @@
                 }
             }
 
-            // Sonucu cache'le (memory limit için cache size kontrolü)
-            if (polygonCache.size < 10000) {
-                polygonCache.set(cacheKey, inside);
-            }
-            
             return inside;
         }
 
@@ -821,8 +767,8 @@
                             const gridPoint = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
                             if (gridPoint) {
                                 gridPoint.classList.add('disabled');
-                                gridPoint.style.backgroundColor = '#ffcccc'; // Boş etkisiz noktalar için açık kırmızı renk
-                                gridPoint.style.border = '2px solid #00cc00'; // Kenar çizgisi yeşil renk
+                                gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                                gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                                 gridPoint.style.cursor = 'not-allowed';
                             }
                         }
@@ -840,65 +786,37 @@
             return allPoints.filter(point => !isPointDisabled(point.x, point.y, player));
         }
 
-        // Ultra-optimized DOM manipulasyonları - batch updates ve virtual DOM
-        const domUpdateQueue = [];
-        let domUpdateScheduled = false;
-        
-        function scheduleDOMUpdate(updateFn) {
-            domUpdateQueue.push(updateFn);
-            if (!domUpdateScheduled) {
-                domUpdateScheduled = true;
-                requestAnimationFrame(processDOMUpdates);
-            }
-        }
-        
-        function processDOMUpdates() {
-            // Batch DOM updates
-            const fragment = document.createDocumentFragment();
-            
-            while (domUpdateQueue.length > 0) {
-                const updateFn = domUpdateQueue.shift();
-                updateFn();
-            }
-            
-            domUpdateScheduled = false;
-        }
-
-        // Etkisiz noktaları görsel olarak güncelle - optimized
+        // Etkisiz noktaları görsel olarak güncelle
         function updateDisabledPointsDisplay() {
-            scheduleDOMUpdate(() => {
-                const disabledPointsDiv = document.getElementById('disabled-points');
-                
-                if (disabledPoints.length === 0) {
-                    disabledPointsDiv.innerHTML = '<div style="color: #666; font-style: italic;">Henüz etkisiz nokta yok</div>';
-                    return;
-                }
+            const disabledPointsDiv = document.getElementById('disabled-points');
+            disabledPointsDiv.innerHTML = '';
 
-                // Fragment kullanarak batch DOM operations
-                const fragment = document.createDocumentFragment();
+            if (disabledPoints.length === 0) {
+                disabledPointsDiv.innerHTML = '<div style="color: #666; font-style: italic;">Henüz etkisiz nokta yok</div>';
+                return;
+            }
+
+            disabledPoints.forEach((point, index) => {
+                const pointElement = document.createElement('div');
+                let playerName;
+                let color;
                 
-                disabledPoints.forEach((point, index) => {
-                    const pointElement = document.createElement('div');
-                    let playerName, color;
-                    
-                    if (point.player === 0) {
-                        playerName = 'Boş Nokta';
-                        color = '#666';
-                    } else if (point.player === 1) {
-                        playerName = 'Mavi';
-                        color = '#007bff';
-                    } else {
-                        playerName = 'Kırmızı';
-                        color = '#dc3545';
-                    }
-                    
-                    pointElement.textContent = `${index + 1}. ${playerName}: x: ${point.x}, y: ${point.y}`;
-                    pointElement.style.cssText = `padding: 3px; border-bottom: 1px solid #eee; color: ${color}`;
-                    fragment.appendChild(pointElement);
-                });
+                if (point.player === 0) {
+                    playerName = 'Boş Nokta';
+                    color = '#666';
+                } else if (point.player === 1) {
+                    playerName = 'Mavi';
+                    color = '#007bff';
+                } else {
+                    playerName = 'Kırmızı';
+                    color = '#dc3545';
+                }
                 
-                disabledPointsDiv.innerHTML = '';
-                disabledPointsDiv.appendChild(fragment);
+                pointElement.textContent = `${index + 1}. ${playerName}: x: ${point.x}, y: ${point.y}`;
+                pointElement.style.padding = '3px';
+                pointElement.style.borderBottom = '1px solid #eee';
+                pointElement.style.color = color;
+                disabledPointsDiv.appendChild(pointElement);
             });
         }
 
@@ -1091,7 +1009,7 @@
             const coordinates = `x: ${col}, y: ${row}`;
             const playerName = currentPlayer === 1 ? 'Oyuncu 1 (Mavi)' : 'Oyuncu 2 (Kırmızı)';
 
-            // Son 10 hamleyi güncelle - optimized DOM operations
+            // Son 10 hamleyi güncelle
             moveCount++;
             const moveInfo = `${moveCount}. ${playerName}: ${coordinates}`;
             allMoves.push(moveInfo);
@@ -1101,28 +1019,23 @@
                 allMoves.shift();
             }
 
-            // Batch DOM update for moves
-            scheduleDOMUpdate(() => {
-                const allMovesDiv = document.getElementById('all-moves');
-                const fragment = document.createDocumentFragment();
-                
-                // Son 10 hamleyi göster - fragment kullanarak
-                allMoves.forEach(move => {
-                    const moveElement = document.createElement('div');
-                    moveElement.textContent = move;
-                    
-                    // Oyuncu rengini hamle numarasından belirle
-                    const isPlayer1 = move.includes('Oyuncu 1');
-                    moveElement.style.cssText = `padding: 5px; border-bottom: 1px solid #eee; color: ${isPlayer1 ? '#007bff' : '#dc3545'}`;
-                    fragment.appendChild(moveElement);
-                });
-                
-                allMovesDiv.innerHTML = '';
-                allMovesDiv.appendChild(fragment);
-                
-                // En son hamleyi görünür yap
-                allMovesDiv.scrollTop = allMovesDiv.scrollHeight;
+            const allMovesDiv = document.getElementById('all-moves');
+            allMovesDiv.innerHTML = ''; // Temizle
+            
+            // Son 10 hamleyi göster
+            allMoves.forEach(move => {
+                const moveElement = document.createElement('div');
+                moveElement.textContent = move;
+                moveElement.style.padding = '5px';
+                moveElement.style.borderBottom = '1px solid #eee';
+                // Oyuncu rengini hamle numarasından belirle
+                const isPlayer1 = move.includes('Oyuncu 1');
+                moveElement.style.color = isPlayer1 ? '#007bff' : '#dc3545';
+                allMovesDiv.appendChild(moveElement);
             });
+
+            // En son hamleyi görünür yap
+            allMovesDiv.scrollTop = allMovesDiv.scrollHeight;
 
             // Çevreleme kontrolü yap - oyun bitmez, sadece gösterim
             const playerForEnclosure = currentPlayer; // Sıra değişmeden önce oyuncuyu kaydet
