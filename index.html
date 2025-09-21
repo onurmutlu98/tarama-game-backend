@@ -626,6 +626,35 @@
                                         }
                                     }
                                 }
+
+                                console.log(`Çevrelenen rakip nokta sayısı: ${allEnclosedOpponents.length} (yeni: ${newEnclosedCount})`);
+
+                                // Eğer yeni rakip noktası çevrelendiyse puan ver
+                                if (allEnclosedOpponents.length > 0) {
+                                    console.log(`ÇEVRELEMEBULUNDu! Oyuncu ${player} - ${size} noktalı çevreleme`);
+                                    
+                                    // Ses efektini sadece YENİ çevreleme yapıldığında çal
+                                    if (newEnclosedCount > 0) {
+                                        playEnclosureSound();
+                                    }
+                                    
+                                    if (player === 1) {
+                                        player1Score += newEnclosedCount;
+                                    } else {
+                                        player2Score += newEnclosedCount;
+                                    }
+
+                                    foundEnclosures.push({
+                                        points: sortedCombo,
+                                        player: player,
+                                        size: size,
+                                        enclosedCount: newEnclosedCount,
+                                        totalEnclosedCount: allEnclosedOpponents.length,
+                                        newEnclosedOpponents: newEnclosedOpponents,
+                                        allEnclosedOpponents: allEnclosedOpponents
+                                    });
+                                    console.log(`Çevreleme eklendi! Toplam bulunan çevreleme: ${foundEnclosures.length}`);
+                                }
                             }
                         }
                         
@@ -640,44 +669,13 @@
                         console.log(`Toplam limit aşıldı: ${totalChecked}`);
                         break;
                     }
-
-                            console.log(`Çevrelenen rakip nokta sayısı: ${allEnclosedOpponents.length} (yeni: ${newEnclosedCount})`);
-
-                            // Eğer yeni rakip noktası çevrelendiyse puan ver
-                            if (allEnclosedOpponents.length > 0) {
-                                console.log(`ÇEVRELEMEBULUNDu! Oyuncu ${player} - ${size} noktalı çevreleme`);
-                                
-                                // Ses efektini sadece YENİ çevreleme yapıldığında çal
-                                if (newEnclosedCount > 0) {
-                                    playEnclosureSound();
-                                }
-                                
-                                if (player === 1) {
-                                    player1Score += newEnclosedCount;
-                                } else {
-                                    player2Score += newEnclosedCount;
-                                }
-
-                                foundEnclosures.push({
-                                    points: sortedCombo,
-                                    player: player,
-                                    size: size,
-                                    enclosedCount: newEnclosedCount,
-                                    totalEnclosedCount: allEnclosedOpponents.length,
-                                    newEnclosedOpponents: newEnclosedOpponents,
-                                    allEnclosedOpponents: allEnclosedOpponents
-                                });
-                                console.log(`Çevreleme eklendi! Toplam bulunan çevreleme: ${foundEnclosures.length}`);
-                            }
-                        }
-                    }
-                    
-                    // Batch arası gecikmeyi kaldırdık - maksimum hız için
-                    // if (i + batchSize < combinations.length) {
-                    //     await new Promise(resolve => setTimeout(resolve, 1));
-                    // }
                 }
             }
+            
+            // Batch arası gecikmeyi kaldırdık - maksimum hız için
+            // if (i + batchSize < combinations.length) {
+            //     await new Promise(resolve => setTimeout(resolve, 1));
+            // }
 
             // Toplam kontrol sayısını ekranda göster
             document.getElementById('total-checks').textContent = totalChecked;
