@@ -2749,10 +2749,8 @@
             
             // Socket bağlantısı kur
             if (!socket) {
-                // Production'da Heroku, development'da localhost kullan
-        const socketUrl = window.location.hostname === 'localhost' ? 
-            'http://localhost:3000' : 
-            'https://tarama-socket-server.herokuapp.com';
+                // Production'da genel socket server kullan
+        const socketUrl = 'http://localhost:3000';
         socket = io(socketUrl);
                 setupSocketListeners();
             }
