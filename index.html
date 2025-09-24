@@ -2410,6 +2410,15 @@
                 return;
             }
 
+            // Online modda nokta farkı kontrolü - iki oyuncu arasındaki fark 1'den fazla olamaz
+            if (currentGameMode === 'online') {
+                const pointDifference = Math.abs(player1TotalPoints - player2TotalPoints);
+                if (pointDifference >= 1) {
+                    console.log('Nokta farkı 1 veya daha fazla - sıra karşı oyuncuda');
+                    return;
+                }
+            }
+
             // Nokta koyma ses efekti çal
             playPlacePointSound();
 
@@ -3172,6 +3181,7 @@
                 const myPlayerNumber = getMyPlayerNumber();
                 if (data.player === myPlayerNumber - 1) { // Backend 0,1 -> Frontend 1,2 dönüşümü
                     // Kendi çevreleme başlattım - UI'ı güncelle
+                    waitingForPlayerAction = false; // Seçim yapıldı, artık nokta seçebilir
                     manualEnclosureMode = true;
                     selectedPointsForEnclosure = [];
                     hideMoveOptions();
