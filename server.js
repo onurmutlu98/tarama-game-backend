@@ -88,7 +88,7 @@ io.on('connection', (socket) => {
                 isHost: true
             }],
             gameState: {
-                board: Array(10).fill().map(() => Array(10).fill(null)),
+                board: Array(20).fill().map(() => Array(20).fill(null)),
                 currentPlayer: 0,
                 gameStarted: false,
                 gameEnded: false,
@@ -265,7 +265,7 @@ io.on('connection', (socket) => {
         
         // Oyun durumunu sıfırla
         room.gameState = {
-            board: Array(10).fill().map(() => Array(10).fill(null)),
+            board: Array(20).fill().map(() => Array(20).fill(null)),
             currentPlayer: 0,
             gameStarted: false,
             gameEnded: false,
