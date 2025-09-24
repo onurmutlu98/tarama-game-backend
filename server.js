@@ -128,7 +128,14 @@ io.on('connection', (socket) => {
                 rooms[roomCode].players.every(p => p.ready)) {
                 
                 rooms[roomCode].gameState.gameStarted = true;
-                io.to(roomCode).emit("gameStarted", rooms[roomCode].gameState);
+                
+                // Oyuncu bilgileriyle birlikte gameState gönder
+                const gameStateWithPlayers = {
+                    ...rooms[roomCode].gameState,
+                    players: rooms[roomCode].players
+                };
+                
+                io.to(roomCode).emit("gameStarted", gameStateWithPlayers);
                 console.log(`Oyun başladı: ${roomCode}`);
             }
         }
