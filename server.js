@@ -185,22 +185,59 @@ io.on('connection', (socket) => {
         // Hamleyi yap
         room.gameState.board[row][col] = actualPlayerIndex;
         
-        // Son hamleyi kaydet
-        room.gameState.lastMove = {
-            player: actualPlayerIndex,
-            row: row,
-            col: col,
-            timestamp: Date.now()
-        };
-        
-        // Sırayı DEĞİŞTİRME - manuel olarak "Sıra Rakipte" butonuna basılması gerekiyor
-        // room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        // Sırayı değiştir
+        room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
 
         // Tüm oyunculara güncel durumu gönder
         io.to(roomCode).emit("gameUpdate", room.gameState);
     });
 
     // Çevreleme başlatma
+    socket.on('startEnclosure', (data) => {
+        const room = rooms[data.roomCode];
+        if (!room) return;
+        
+        const playerIndex = room.players.findIndex(p => p.id === socket.id);
+        if (playerIndex === -1) return;
+        
+        if (room.gameState.currentPlayer !== playerIndex) return;
+        
+        io.to(data.roomCode).emit('enclosureStarted', {
+            player: playerIndex,
+            currentPlayer: room.gameState.currentPlayer
+        });
+    });
+
+    // Çevreleme bitirme
+    socket.on('finishEnclosure', (data) => {
+        const room = rooms[data.roomCode];
+        if (!room) return;
+        
+        const playerIndex = room.players.findIndex(p => p.id === socket.id);
+        if (playerIndex === -1) return;
+        
+        if (room.gameState.currentPlayer !== playerIndex) return;
+
+        // Çevreleme mantığını burada uygula
+        // Şimdilik basit bir onay gönderelim
+        room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        
+        io.to(data.roomCode).emit('enclosureFinished', {
+            success: true,
+            gameState: room.gameState
+        });
+    });
+
+    // Çevreleme iptal etme
+    socket.on('cancelEnclosure', (data) => {
+        const room = rooms[data.roomCode];
+        if (!room) return;
+        
+        io.to(data.roomCode).emit('enclosureCancelled', {
+            currentPlayer: room.gameState.currentPlayer
+        });
+    });
+
     // Sıra geçme
     socket.on('passTurn', (data) => {
         const room = rooms[data.roomCode];
@@ -211,18 +248,11 @@ io.on('connection', (socket) => {
         
         if (room.gameState.currentPlayer !== playerIndex) return;
         
-        // Ard arda hamle kontrolü - son hamle bu oyuncu tarafından yapılmışsa sıra geçişine izin verme
-        if (room.gameState.lastMove && room.gameState.lastMove.player === playerIndex) {
-            // Son hamle bu oyuncu tarafından yapıldı, sıra geçişine izin ver
-            room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
-            
-            io.to(data.roomCode).emit('turnPassed', {
-                currentPlayer: room.gameState.currentPlayer
-            });
-        } else {
-            // Son hamle bu oyuncu tarafından yapılmadı, hata gönder
-            socket.emit("error", "Önce bir hamle yapmalısınız!");
-        }
+        room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        
+        io.to(data.roomCode).emit('turnPassed', {
+            currentPlayer: room.gameState.currentPlayer
+        });
     });
 
     // Oyunu yeniden başlat
