@@ -159,35 +159,50 @@ io.on('connection', (socket) => {
 
     // Oyun hamlesi
     socket.on("makeMove", ({ roomCode, row, col, playerIndex }) => {
-        if (!rooms[roomCode] || !rooms[roomCode].gameState.gameStarted) return;
+        console.log(`MakeMove alındı: roomCode=${roomCode}, row=${row}, col=${col}, playerIndex=${playerIndex}`);
+        
+        if (!rooms[roomCode] || !rooms[roomCode].gameState.gameStarted) {
+            console.log("Oda bulunamadı veya oyun başlamamış");
+            return;
+        }
 
         const room = rooms[roomCode];
         const actualPlayerIndex = room.players.findIndex(p => p.id === socket.id);
         
+        console.log(`Gerçek playerIndex: ${actualPlayerIndex}, Gönderilen: ${playerIndex}`);
+        console.log(`Mevcut sıra: ${room.gameState.currentPlayer}`);
+        console.log(`Board durumu [${row}][${col}]: ${room.gameState.board[row][col]}`);
+        
         // Güvenlik kontrolü: gönderilen playerIndex ile gerçek playerIndex eşleşmeli
         if (actualPlayerIndex !== playerIndex) {
+            console.log("PlayerIndex uyumsuzluğu!");
             socket.emit("error", "Geçersiz oyuncu!");
             return;
         }
         
         if (actualPlayerIndex !== room.gameState.currentPlayer) {
+            console.log("Sıra kontrolü başarısız!");
             socket.emit("error", "Sıra sizde değil!");
             return;
         }
 
         if (room.gameState.board[row][col] !== null) {
+            console.log("Kare zaten dolu!");
             socket.emit("error", "Bu kare zaten dolu!");
             return;
         }
 
         // Hamleyi yap
         room.gameState.board[row][col] = actualPlayerIndex;
+        console.log(`Hamle yapıldı: [${row}][${col}] = ${actualPlayerIndex}`);
         
         // Sırayı değiştir
         room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        console.log(`Yeni sıra: ${room.gameState.currentPlayer}`);
 
         // Tüm oyunculara güncel durumu gönder
         io.to(roomCode).emit("gameUpdate", room.gameState);
+        console.log("GameUpdate gönderildi");
     });
 
     // Çevreleme başlatma
