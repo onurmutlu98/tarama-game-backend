@@ -185,8 +185,8 @@ io.on('connection', (socket) => {
         // Hamleyi yap
         room.gameState.board[row][col] = actualPlayerIndex;
         
-        // Sırayı değiştirme - artık otomatik değişmeyecek, sadece passTurn ile değişecek
-        // room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        // Sırayı değiştir
+        room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
 
         // Tüm oyunculara güncel durumu gönder
         io.to(roomCode).emit("gameUpdate", room.gameState);
@@ -219,25 +219,12 @@ io.on('connection', (socket) => {
         if (room.gameState.currentPlayer !== playerIndex) return;
 
         // Çevreleme mantığını burada uygula
-        // selectedPoints ile çevreleme doğrulaması yapılabilir
-        const selectedPoints = data.selectedPoints || [];
-        
-        if (selectedPoints.length < 4) {
-            io.to(data.roomCode).emit('enclosureFinished', {
-                success: false,
-                message: 'Çevreleme için en az 4 nokta seçmelisiniz!'
-            });
-            return;
-        }
-        
-        // Basit çevreleme onayı - gerçek çevreleme mantığı frontend'de yapılıyor
-        // Sırayı değiştir
+        // Şimdilik basit bir onay gönderelim
         room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
         
         io.to(data.roomCode).emit('enclosureFinished', {
             success: true,
-            gameState: room.gameState,
-            selectedPoints: selectedPoints
+            gameState: room.gameState
         });
     });
 
