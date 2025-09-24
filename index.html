@@ -3200,7 +3200,8 @@
                 currentPlayer = data.currentPlayer + 1; // Backend 0,1 -> Frontend 1,2 dönüşümü
                 updateCurrentPlayerDisplay();
                 resetManualEnclosureMode();
-                waitingForPlayerAction = false;
+                // Online modda çevreleme iptal edildiğinde sıra karşı oyuncuya geçer
+                // waitingForPlayerAction false yapılmaz çünkü sıra artık karşı oyuncuda
             });
         }
 
