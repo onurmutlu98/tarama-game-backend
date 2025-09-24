@@ -47,16 +47,31 @@ function generateRoomCode() {
 
 // Boş odaları temizle
 function cleanupEmptyRooms() {
+    const now = new Date();
     Object.keys(rooms).forEach(roomCode => {
-        if (rooms[roomCode].players.length === 0) {
-            delete rooms[roomCode];
-            console.log(`Boş oda temizlendi: ${roomCode}`);
+        const room = rooms[roomCode];
+        // Boş odaları 30 dakika sonra temizle
+        if (room.players.length === 0) {
+            const lastActivity = room.lastActivity || room.createdAt;
+            const timeSinceLastActivity = now - lastActivity;
+            if (timeSinceLastActivity > 30 * 60 * 1000) { // 30 dakika
+                delete rooms[roomCode];
+                console.log(`Boş oda temizlendi: ${roomCode}`);
+            }
+        }
+        // Çok eski odaları temizle (2 saat)
+        else {
+            const timeSinceCreated = now - room.createdAt;
+            if (timeSinceCreated > 2 * 60 * 60 * 1000) { // 2 saat
+                delete rooms[roomCode];
+                console.log(`Eski oda temizlendi: ${roomCode}`);
+            }
         }
     });
 }
 
-// Her 5 dakikada bir boş odaları temizle
-setInterval(cleanupEmptyRooms, 5 * 60 * 1000);
+// Her 10 dakikada bir odaları kontrol et
+setInterval(cleanupEmptyRooms, 10 * 60 * 1000);
 
 io.on('connection', (socket) => {
     console.log("Oyuncu bağlandı:", socket.id);
@@ -79,7 +94,8 @@ io.on('connection', (socket) => {
                 gameEnded: false,
                 winner: null
             },
-            createdAt: new Date()
+            createdAt: new Date(),
+            lastActivity: new Date()
         };
 
         socket.join(roomCode);
@@ -272,10 +288,12 @@ io.on('connection', (socket) => {
             
             if (playerIndex !== -1) {
                 room.players.splice(playerIndex, 1);
+                console.log(`Oyuncu ${socket.id} odadan çıkarıldı: ${roomCode}`);
                 
+                // Oda boş kaldıysa, lastActivity zamanını güncelle
                 if (room.players.length === 0) {
-                    delete rooms[roomCode];
-                    console.log(`Oda silindi: ${roomCode}`);
+                    room.lastActivity = new Date();
+                    console.log(`Oda boş kaldı: ${roomCode} - 30 dakika sonra silinecek`);
                 } else {
                     // Kalan oyuncuya host yetkisi ver
                     if (room.players.length > 0) {
