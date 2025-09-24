@@ -142,13 +142,19 @@ io.on('connection', (socket) => {
     });
 
     // Oyun hamlesi
-    socket.on("makeMove", ({ roomCode, row, col }) => {
+    socket.on("makeMove", ({ roomCode, row, col, playerIndex }) => {
         if (!rooms[roomCode] || !rooms[roomCode].gameState.gameStarted) return;
 
         const room = rooms[roomCode];
-        const playerIndex = room.players.findIndex(p => p.id === socket.id);
+        const actualPlayerIndex = room.players.findIndex(p => p.id === socket.id);
         
-        if (playerIndex !== room.gameState.currentPlayer) {
+        // Güvenlik kontrolü: gönderilen playerIndex ile gerçek playerIndex eşleşmeli
+        if (actualPlayerIndex !== playerIndex) {
+            socket.emit("error", "Geçersiz oyuncu!");
+            return;
+        }
+        
+        if (actualPlayerIndex !== room.gameState.currentPlayer) {
             socket.emit("error", "Sıra sizde değil!");
             return;
         }
@@ -159,7 +165,7 @@ io.on('connection', (socket) => {
         }
 
         // Hamleyi yap
-        room.gameState.board[row][col] = playerIndex;
+        room.gameState.board[row][col] = actualPlayerIndex;
         
         // Sırayı değiştir
         room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
