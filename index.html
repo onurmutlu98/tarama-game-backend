@@ -2410,15 +2410,6 @@
                 return;
             }
 
-            // Online modda nokta farkı kontrolü - iki oyuncu arasındaki fark 1'den fazla olamaz
-            if (currentGameMode === 'online') {
-                const pointDifference = Math.abs(player1TotalPoints - player2TotalPoints);
-                if (pointDifference >= 1) {
-                    console.log('Nokta farkı 1 veya daha fazla - sıra karşı oyuncuda');
-                    return;
-                }
-            }
-
             // Nokta koyma ses efekti çal
             playPlacePointSound();
 
@@ -2464,6 +2455,15 @@
             // Koordinatları kaydet ve göster
             const coordinates = `x: ${col}, y: ${row}`;
             const playerName = currentPlayer === 1 ? 'Oyuncu 1 (Mavi)' : 'Oyuncu 2 (Kırmızı)';
+
+            // Online modda direkt sıra geç
+            if (currentGameMode === 'online') {
+                // Online modda nokta koyunca direkt sıra karşı oyuncuya geçer
+                if (currentRoom && socket) {
+                    socket.emit('passTurn', { roomCode: currentRoom });
+                }
+                return;
+            }
 
             // Sıra değişimi yapma - oyuncu seçim yapana kadar aynı oyuncu kalacak
             // currentPlayer = currentPlayer === 1 ? 2 : 1;
