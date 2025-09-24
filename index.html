@@ -1414,6 +1414,9 @@
                     <strong style="color: #2c3e50;">Hamle Seçenekleri:</strong>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button id="start-enclosure-btn" class="control-btn enclosure-btn" onclick="startManualEnclosure()">
+                        🔄 Çevrele
+                    </button>
                     <button id="pass-turn-btn" class="control-btn pass-btn" onclick="passTurn()">
                         ⏭️ Sıra Rakipte
                     </button>
@@ -2329,7 +2332,7 @@
                 // Frontend currentPlayer (1,2) -> Backend playerIndex (0,1) dönüşümü
                 socket.emit('makeMove', { roomCode: currentRoom, row, col, playerIndex: currentPlayer - 1 });
                 
-                // Online modda hamle sonrası seçenekleri göster
+                // Online modda da çevreleme seçeneklerini göster
                 setTimeout(() => {
                     waitingForPlayerAction = true;
                     showMoveOptions();
@@ -2344,21 +2347,19 @@
                 return;
             }
 
-            // Online modda ard arda hamle kontrolü - waitingForPlayerAction ile kontrol edilir
-            if (currentGameMode === 'online' && waitingForPlayerAction) {
-                alert('Önce "Sıra Rakipte" butonuna basmalısınız!');
+            // Aynı oyuncunun ard arda nokta koymasını engelle - Toplam nokta sayısı kontrolü
+            const currentPlayerTotalPoints = currentPlayer === 1 ? player1TotalPoints : player2TotalPoints;
+            const otherPlayerTotalPoints = currentPlayer === 1 ? player2TotalPoints : player1TotalPoints;
+            
+            if (currentPlayerTotalPoints > otherPlayerTotalPoints) {
+                alert('Aynı oyuncu ard arda nokta koyamaz! Önce diğer oyuncunun sırası gelmelidir.');
                 return;
             }
 
-            // Offline modda aynı oyuncunun ard arda nokta koymasını engelle - Toplam nokta sayısı kontrolü
-            if (currentGameMode !== 'online') {
-                const currentPlayerTotalPoints = currentPlayer === 1 ? player1TotalPoints : player2TotalPoints;
-                const otherPlayerTotalPoints = currentPlayer === 1 ? player2TotalPoints : player1TotalPoints;
-                
-                if (currentPlayerTotalPoints > otherPlayerTotalPoints) {
-                    alert('Aynı oyuncu ard arda nokta koyamaz! Önce diğer oyuncunun sırası gelmelidir.');
-                    return;
-                }
+            // Oyuncu seçim yapması bekleniyorsa nokta koymasını engelle
+            if (waitingForPlayerAction) {
+                alert('Önce "Çevreleme Yap" veya "Sıra Rakipte" seçeneklerinden birini seçmelisiniz!');
+                return;
             }
 
             // Eğer nokta zaten doldurulmuşsa, tıklamayı ignore et
@@ -2554,6 +2555,33 @@
         }
 
         // Manuel çevreleme başlat
+        function startManualEnclosure() {
+            waitingForPlayerAction = false; // Seçim yapıldı
+            manualEnclosureMode = true;
+            selectedPointsForEnclosure = [];
+            
+            // Online modda çevreleme başlatma isteği gönder
+            if (currentGameMode === 'online' && currentRoom) {
+                if (!socket) {
+                    console.error('Socket bağlantısı yok!');
+                    return;
+                }
+                socket.emit('startEnclosure', { roomCode: currentRoom });
+                return;
+            }
+            
+            // Kontrol panellerini değiştir
+            hideMoveOptions();
+            const enclosureModeControls = document.getElementById('enclosure-mode-controls');
+            enclosureModeControls.style.display = 'block';
+            
+            // Bilgi güncelle
+            updateSelectedPointsInfo();
+            
+            // Kullanıcıya bilgi ver
+            console.log('Manuel çevreleme modu başlatıldı. Çevreleme için noktaları seçin.');
+        }
+
         // Sırayı rakibe geç
         function passTurn() {
             waitingForPlayerAction = false; // Seçim yapıldı
@@ -2563,16 +2591,6 @@
             if (currentGameMode === 'online' && currentRoom) {
                 if (!socket) {
                     console.error('Socket bağlantısı yok!');
-                    return;
-                }
-                socket.emit('passTurn', { roomCode: currentRoom });
-                return;
-            }
-            
-            // Offline modda direkt sırayı değiştir
-            currentPlayer = currentPlayer === 1 ? 2 : 1;
-            updatePlayerInfo();
-        }
                     return;
                 }
                 socket.emit('passTurn', { roomCode: currentRoom });
@@ -3114,11 +3132,39 @@
                 showRoomPanel();
             });
 
+            // Çevreleme event'leri
+            socket.on('enclosureStarted', (data) => {
+                if (data.player !== getMyPlayerNumber()) {
+                    // Diğer oyuncu çevreleme başlattı
+                    console.log(`Oyuncu ${data.player} çevreleme modunu başlattı`);
+                }
+            });
+
             socket.on('turnPassed', (data) => {
                 currentPlayer = data.currentPlayer + 1; // Backend 0,1 -> Frontend 1,2 dönüşümü
                 updateCurrentPlayerDisplay();
                 waitingForPlayerAction = false;
                 hideMoveOptions();
+            });
+
+            socket.on('enclosureFinished', (data) => {
+                if (data.success) {
+                    // Çevreleme başarılı
+                    updateGameFromServer(data.gameState);
+                    resetManualEnclosureMode();
+                } else {
+                    // Çevreleme başarısız
+                    alert(data.message);
+                    resetManualEnclosureMode();
+                    showMoveOptions();
+                }
+            });
+
+            socket.on('enclosureCancelled', (data) => {
+                currentPlayer = data.currentPlayer;
+                updateCurrentPlayerDisplay();
+                resetManualEnclosureMode();
+                waitingForPlayerAction = false;
             });
         }
 
