@@ -2342,6 +2342,24 @@
                 if (point.classList.contains('filled')) {
                     return;
                 }
+
+                // Hamleyi frontend'de de işle
+                point.classList.add('filled');
+                if (currentPlayer === 1) {
+                    point.classList.add('player1', 'blue');
+                    point.style.backgroundColor = '#4ecdc4';
+                    point.style.borderColor = '#26a69a';
+                    point.style.color = '#4ecdc4';
+                } else {
+                    point.classList.add('player2', 'red');
+                    point.style.backgroundColor = '#ff6b6b';
+                    point.style.borderColor = '#e53e3e';
+                    point.style.color = '#ff6b6b';
+                }
+                point.textContent = '●';
+                
+                // Frontend gameBoard'unu güncelle
+                gameBoard[row][col] = currentPlayer;
                 
                 // Frontend currentPlayer (1,2) -> Backend playerIndex (0,1) dönüşümü
                 socket.emit('makeMove', { roomCode: currentRoom, row, col, playerIndex: currentPlayer - 1 });
@@ -2820,8 +2838,11 @@
             const dx = Math.abs(point1.x - point2.x);
             const dy = Math.abs(point1.y - point2.y);
             
-            // Dikey, yatay veya çapraz komşuluk
-            return (dx <= 1 && dy <= 1) && !(dx === 0 && dy === 0);
+            // Mesafe kontrolü: 1 birim (yatay/dikey) veya √2 birim (çapraz)
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // 1 birim veya √2 birim (yaklaşık 1.414) mesafe kabul edilir
+            return distance <= 1.5 && distance > 0;
         }
 
         // Kapalı şekil oluşturup oluşturmadığını kontrol et
