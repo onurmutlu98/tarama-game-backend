@@ -20,6 +20,118 @@ const io = new Server(server, {
   }
 });
 
+// Çevreleme doğrulama fonksiyonları
+function validateEnclosure(selectedPoints, gameState) {
+    if (selectedPoints.length < 4) {
+        return false;
+    }
+    
+    // Seçilen noktaların bağlantılı olup olmadığını kontrol et
+    if (!arePointsConnected(selectedPoints)) {
+        return false;
+    }
+    
+    // Kapalı bir şekil oluşturup oluşturmadığını kontrol et
+    if (!formsClosedShape(selectedPoints)) {
+        return false;
+    }
+    
+    // Çevrelenen alanın içinde rakip noktalar olup olmadığını kontrol et
+    const enclosedPoints = getEnclosedPoints(selectedPoints, gameState);
+    if (enclosedPoints.length === 0) {
+        return false;
+    }
+    
+    // Çevrelenen noktaların rakibe ait olup olmadığını kontrol et
+    const currentPlayerNum = gameState.currentPlayer + 1; // 0,1 -> 1,2
+    const opponentPlayer = currentPlayerNum === 1 ? 2 : 1;
+    const hasOpponentPoints = enclosedPoints.some(point => 
+        gameState.board[point.y] && gameState.board[point.y][point.x] === opponentPlayer
+    );
+    
+    return hasOpponentPoints;
+}
+
+function arePointsConnected(points) {
+    if (points.length < 2) return false;
+    
+    // Her nokta en az bir diğer noktaya komşu olmalı
+    for (let i = 0; i < points.length; i++) {
+        let hasNeighbor = false;
+        for (let j = 0; j < points.length; j++) {
+            if (i !== j && areNeighbors(points[i], points[j])) {
+                hasNeighbor = true;
+                break;
+            }
+        }
+        if (!hasNeighbor) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+function areNeighbors(point1, point2) {
+    const dx = Math.abs(point1.x - point2.x);
+    const dy = Math.abs(point1.y - point2.y);
+    return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+}
+
+function formsClosedShape(points) {
+    // Basit bir kapalı şekil kontrolü - her nokta tam olarak 2 komşuya sahip olmalı
+    for (let point of points) {
+        let neighborCount = 0;
+        for (let otherPoint of points) {
+            if (point !== otherPoint && areNeighbors(point, otherPoint)) {
+                neighborCount++;
+            }
+        }
+        if (neighborCount !== 2) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function getEnclosedPoints(selectedPoints, gameState) {
+    // Basit bir çevreleme algoritması - seçilen noktaların oluşturduğu alanın içindeki noktaları bul
+    const enclosedPoints = [];
+    
+    // Minimum ve maksimum koordinatları bul
+    let minX = Math.min(...selectedPoints.map(p => p.x));
+    let maxX = Math.max(...selectedPoints.map(p => p.x));
+    let minY = Math.min(...selectedPoints.map(p => p.y));
+    let maxY = Math.max(...selectedPoints.map(p => p.y));
+    
+    // Bu alandaki her noktayı kontrol et
+    for (let y = minY + 1; y < maxY; y++) {
+        for (let x = minX + 1; x < maxX; x++) {
+            // Bu nokta seçilen noktalar arasında mı?
+            const isSelected = selectedPoints.some(p => p.x === x && p.y === y);
+            if (!isSelected) {
+                // Bu nokta çevrelenen alan içinde mi kontrol et (basit ray casting)
+                if (isPointInPolygon({x, y}, selectedPoints)) {
+                    enclosedPoints.push({x, y});
+                }
+            }
+        }
+    }
+    
+    return enclosedPoints;
+}
+
+function isPointInPolygon(point, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        if (((polygon[i].y > point.y) !== (polygon[j].y > point.y)) &&
+            (point.x < (polygon[j].x - polygon[i].x) * (point.y - polygon[i].y) / (polygon[j].y - polygon[i].y) + polygon[i].x)) {
+            inside = !inside;
+        }
+    }
+    return inside;
+}
+
 // Health check endpoint
 app.get('/', (req, res) => {
     res.json({ 
@@ -218,20 +330,53 @@ io.on('connection', (socket) => {
         
         if (room.gameState.currentPlayer !== playerIndex) return;
 
-        // Çevreleme mantığını burada uygula
-        // Şimdilik basit bir onay gönderelim
-        room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        // Çevreleme doğrulaması yap
+        const selectedPoints = data.selectedPoints;
+        const isValid = validateEnclosure(selectedPoints, room.gameState);
         
-        io.to(data.roomCode).emit('enclosureFinished', {
-            success: true,
-            gameState: room.gameState
-        });
+        if (isValid) {
+            // Geçerli çevreleme - puan ver ve sırayı değiştir
+            const enclosedPoints = getEnclosedPoints(selectedPoints, room.gameState);
+            const opponentPlayer = playerIndex === 0 ? 1 : 0;
+            
+            // Puan hesapla
+            let score = 0;
+            enclosedPoints.forEach(point => {
+                if (room.gameState.board[point.y] && room.gameState.board[point.y][point.x] === opponentPlayer + 1) {
+                    score++;
+                }
+            });
+            
+            // Puanı ekle
+            if (!room.gameState.scores) {
+                room.gameState.scores = [0, 0];
+            }
+            room.gameState.scores[playerIndex] += score;
+            
+            // Sırayı değiştir
+            room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+            
+            io.to(data.roomCode).emit('enclosureFinished', {
+                success: true,
+                gameState: room.gameState,
+                message: `Geçerli çevreleme! ${score} puan kazandınız.`
+            });
+        } else {
+            // Geçersiz çevreleme
+            io.to(data.roomCode).emit('enclosureFinished', {
+                success: false,
+                message: 'Yanlış çevreleme yaptınız! Kurallara uygun bir çevreleme yapmalısınız.'
+            });
+        }
     });
 
     // Çevreleme iptal etme
     socket.on('cancelEnclosure', (data) => {
         const room = rooms[data.roomCode];
         if (!room) return;
+        
+        // Sırayı rakibe geçir
+        room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
         
         io.to(data.roomCode).emit('enclosureCancelled', {
             currentPlayer: room.gameState.currentPlayer
