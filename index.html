@@ -2324,6 +2324,20 @@
                     console.error('Socket bağlantısı yok!');
                     return;
                 }
+                
+                // Oyuncunun kendi sırasında olup olmadığını kontrol et
+                const myPlayerNumber = getMyPlayerNumber();
+                if (currentPlayer !== myPlayerNumber) {
+                    alert('Şu anda sizin sıranız değil!');
+                    return;
+                }
+                
+                // Oyuncu seçim yapması bekleniyorsa nokta koymasını engelle
+                if (waitingForPlayerAction) {
+                    alert('Önce "Çevreleme Yap" veya "Sıra Rakipte" seçeneklerinden birini seçmelisiniz!');
+                    return;
+                }
+                
                 // Eğer nokta zaten doldurulmuşsa, tıklamayı ignore et
                 if (point.classList.contains('filled')) {
                     return;
@@ -3134,9 +3148,19 @@
 
             // Çevreleme event'leri
             socket.on('enclosureStarted', (data) => {
-                if (data.player !== getMyPlayerNumber()) {
+                const myPlayerNumber = getMyPlayerNumber();
+                if (data.player === myPlayerNumber - 1) { // Backend 0,1 -> Frontend 1,2 dönüşümü
+                    // Kendi çevreleme başlattım - UI'ı güncelle
+                    manualEnclosureMode = true;
+                    selectedPointsForEnclosure = [];
+                    hideMoveOptions();
+                    const enclosureModeControls = document.getElementById('enclosure-mode-controls');
+                    enclosureModeControls.style.display = 'block';
+                    updateSelectedPointsInfo();
+                    console.log('Manuel çevreleme modu başlatıldı. Çevreleme için noktaları seçin.');
+                } else {
                     // Diğer oyuncu çevreleme başlattı
-                    console.log(`Oyuncu ${data.player} çevreleme modunu başlattı`);
+                    console.log(`Oyuncu ${data.player + 1} çevreleme modunu başlattı`);
                 }
             });
 
@@ -3173,7 +3197,7 @@
             });
 
             socket.on('enclosureCancelled', (data) => {
-                currentPlayer = data.currentPlayer;
+                currentPlayer = data.currentPlayer + 1; // Backend 0,1 -> Frontend 1,2 dönüşümü
                 updateCurrentPlayerDisplay();
                 resetManualEnclosureMode();
                 waitingForPlayerAction = false;
