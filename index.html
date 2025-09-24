@@ -2324,6 +2324,13 @@
                     console.error('Socket bağlantısı yok!');
                     return;
                 }
+                
+                // Oyuncu seçim yapması bekleniyorsa nokta koymasını engelle
+                if (waitingForPlayerAction) {
+                    alert('Önce "Çevreleme Yap" veya "Sıra Rakipte" seçeneklerinden birini seçmelisiniz!');
+                    return;
+                }
+                
                 // Eğer nokta zaten doldurulmuşsa, tıklamayı ignore et
                 if (point.classList.contains('filled')) {
                     return;
@@ -2609,7 +2616,7 @@
         // Manuel çevreleme bitir
         function finishManualEnclosure() {
             if (selectedPointsForEnclosure.length < 4) {
-                alert('Çevreleme için en az 4 nokta seçmelisiniz!');
+                alert('Minimum 4 nokta seçiniz! Çevreleme için en az 4 nokta gereklidir.');
                 return;
             }
             
