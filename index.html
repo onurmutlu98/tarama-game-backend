@@ -3149,9 +3149,21 @@
 
             socket.on('enclosureFinished', (data) => {
                 if (data.success) {
-                    // Çevreleme başarılı
-                    updateGameFromServer(data.gameState);
-                    resetManualEnclosureMode();
+                    // Çevreleme başarılı - önce frontend'de çevreleme doğrulaması yap
+                    const isValidEnclosure = validateManualEnclosure(data.selectedPoints || selectedPointsForEnclosure);
+                    
+                    if (isValidEnclosure) {
+                        // Geçerli çevreleme - puan ver
+                        processValidEnclosure(data.selectedPoints || selectedPointsForEnclosure);
+                        updateGameFromServer(data.gameState);
+                        resetManualEnclosureMode();
+                        console.log('Online çevreleme başarılı!');
+                    } else {
+                        // Geçersiz çevreleme
+                        alert('Geçersiz çevreleme! Kurallara uygun bir çevreleme yapmalısınız.');
+                        resetManualEnclosureMode();
+                        showMoveOptions();
+                    }
                 } else {
                     // Çevreleme başarısız
                     alert(data.message);
