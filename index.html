@@ -2357,18 +2357,18 @@
                 return;
             }
 
+            // Oyuncu seçim yapması bekleniyorsa nokta koymasını engelle (çevreleme modu hariç)
+            if (waitingForPlayerAction && !manualEnclosureMode) {
+                alert('Önce "Çevreleme Yap" veya "Sıra Rakipte" seçeneklerinden birini seçmelisiniz!');
+                return;
+            }
+
             // Aynı oyuncunun ard arda nokta koymasını engelle - Toplam nokta sayısı kontrolü
             const currentPlayerTotalPoints = currentPlayer === 1 ? player1TotalPoints : player2TotalPoints;
             const otherPlayerTotalPoints = currentPlayer === 1 ? player2TotalPoints : player1TotalPoints;
             
             if (currentPlayerTotalPoints > otherPlayerTotalPoints) {
                 alert('Aynı oyuncu ard arda nokta koyamaz! Önce diğer oyuncunun sırası gelmelidir.');
-                return;
-            }
-
-            // Oyuncu seçim yapması bekleniyorsa nokta koymasını engelle
-            if (waitingForPlayerAction) {
-                alert('Önce "Çevreleme Yap" veya "Sıra Rakipte" seçeneklerinden birini seçmelisiniz!');
                 return;
             }
 
@@ -2594,6 +2594,7 @@
 
         // Sırayı rakibe geç
         function passTurn() {
+            console.log('passTurn fonksiyonu çağrıldı');
             waitingForPlayerAction = false; // Seçim yapıldı
             hideMoveOptions();
             
@@ -2603,6 +2604,7 @@
                     console.error('Socket bağlantısı yok!');
                     return;
                 }
+                console.log('Online modda sıra geçiş isteği gönderiliyor:', { roomCode: currentRoom });
                 // Online modda hamle yapma hakkını sıfırla
                 onlineMoveMade = false;
                 socket.emit('passTurn', { roomCode: currentRoom });
@@ -3169,7 +3171,9 @@
             });
 
             socket.on('turnPassed', (data) => {
+                console.log('Sıra geçiş eventi alındı:', data);
                 currentPlayer = data.currentPlayer + 1; // Backend 0,1 -> Frontend 1,2 dönüşümü
+                console.log('Yeni currentPlayer:', currentPlayer);
                 updateCurrentPlayerDisplay();
                 waitingForPlayerAction = false;
                 hideMoveOptions();
