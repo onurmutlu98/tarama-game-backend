@@ -2307,6 +2307,9 @@
             }
         }
 
+        // Online modda hamle kontrolü için değişken
+        let onlineMoveMade = false;
+
         // Nokta tıklama işlemi
         function handlePointClick(event) {
             const point = event.target;
@@ -2329,8 +2332,21 @@
                     return;
                 }
                 
+                // Eğer bu oyuncu zaten hamle yaptıysa ve sırayı geçmediyse, yeni hamle yapmasına izin verme
+                if (onlineMoveMade) {
+                    alert('Sırayı geçmeden yeni hamle yapamazsınız!');
+                    return;
+                }
+                
                 // Frontend currentPlayer (1,2) -> Backend playerIndex (0,1) dönüşümü
                 socket.emit('makeMove', { roomCode: currentRoom, row, col, playerIndex: currentPlayer - 1 });
+                
+                // Hamle yapıldığını işaretle ve seçenekleri göster
+                onlineMoveMade = true;
+                setTimeout(() => {
+                    waitingForPlayerAction = true;
+                    showMoveOptions();
+                }, 100);
                 
                 return;
             }
@@ -2587,6 +2603,8 @@
                     console.error('Socket bağlantısı yok!');
                     return;
                 }
+                // Online modda hamle yapma hakkını sıfırla
+                onlineMoveMade = false;
                 socket.emit('passTurn', { roomCode: currentRoom });
                 return;
             }
@@ -3139,6 +3157,8 @@
                 updateCurrentPlayerDisplay();
                 waitingForPlayerAction = false;
                 hideMoveOptions();
+                // Yeni sıra başladığında hamle hakkını sıfırla
+                onlineMoveMade = false;
             });
 
             socket.on('enclosureFinished', (data) => {
