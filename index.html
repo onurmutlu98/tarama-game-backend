@@ -3242,10 +3242,19 @@
             });
 
             socket.on('enclosureCancelled', (data) => {
-                currentPlayer = data.currentPlayer;
+                console.log('Çevreleme iptal edildi eventi alındı:', data);
+                console.log('Önceki currentPlayer:', currentPlayer);
+                
+                // Backend currentPlayer (0,1) -> Frontend currentPlayer (1,2) dönüşümü
+                currentPlayer = data.currentPlayer + 1;
+                console.log('Yeni currentPlayer:', currentPlayer);
+                
                 updateCurrentPlayerDisplay();
                 resetManualEnclosureMode();
                 waitingForPlayerAction = false;
+                onlineMoveMade = false; // Yeni sıra başladığında hamle hakkını sıfırla
+                
+                console.log('Çevreleme iptal edildi, yeni oyuncu hamle yapabilir');
             });
         }
 
