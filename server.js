@@ -218,12 +218,30 @@ io.on('connection', (socket) => {
         
         if (room.gameState.currentPlayer !== playerIndex) return;
 
-        // Çevreleme mantığını burada uygula
-        // Şimdilik basit bir onay gönderelim
-        room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        // Çevreleme doğrulaması frontend'de yapılacak
+        // Backend sadece sonucu iletir
+        io.to(data.roomCode).emit('enclosureValidationRequest', {
+            player: playerIndex,
+            selectedPoints: data.selectedPoints
+        });
+    });
+
+    // Çevreleme sonucu bildirme
+    socket.on('enclosureResult', (data) => {
+        const room = rooms[data.roomCode];
+        if (!room) return;
+        
+        const playerIndex = room.players.findIndex(p => p.id === socket.id);
+        if (playerIndex === -1) return;
+        
+        if (data.success) {
+            // Başarılı çevreleme - sırayı değiştir
+            room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        }
         
         io.to(data.roomCode).emit('enclosureFinished', {
-            success: true,
+            success: data.success,
+            message: data.message,
             gameState: room.gameState
         });
     });
