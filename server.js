@@ -185,8 +185,8 @@ io.on('connection', (socket) => {
         // Hamleyi yap
         room.gameState.board[row][col] = actualPlayerIndex;
         
-        // Sırayı değiştir
-        room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        // Sırayı değiştirme - manuel olarak yapılacak
+        // room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
 
         // Tüm oyunculara güncel durumu gönder
         io.to(roomCode).emit("gameUpdate", room.gameState);
