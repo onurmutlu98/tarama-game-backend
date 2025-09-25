@@ -2594,7 +2594,7 @@
 
         // Sırayı rakibe geç
         function passTurn() {
-            console.log('passTurn fonksiyonu çağrıldı');
+            console.log('passTurn fonksiyonu çağrıldı, currentGameMode:', currentGameMode);
             waitingForPlayerAction = false; // Seçim yapıldı
             hideMoveOptions();
             
@@ -2608,10 +2608,11 @@
                 // Online modda hamle yapma hakkını sıfırla
                 onlineMoveMade = false;
                 socket.emit('passTurn', { roomCode: currentRoom });
-                return;
+                return; // Online modda frontend'de sıra değiştirme, backend halleder
             }
             
-            // Sıra değişimi
+            // Offline mod için sıra değişimi
+            console.log('Offline modda sıra değiştiriliyor');
             currentPlayer = currentPlayer === 1 ? 2 : 1;
             
             // Oyuncu bilgisini güncelle
@@ -2622,7 +2623,7 @@
 
         // Manuel çevreleme bitir
         function finishManualEnclosure() {
-            console.log('finishManualEnclosure çağrıldı');
+            console.log('finishManualEnclosure çağrıldı, currentGameMode:', currentGameMode);
             console.log('Seçilen nokta sayısı:', selectedPointsForEnclosure.length);
             
             if (selectedPointsForEnclosure.length < 4) {
@@ -2644,10 +2645,11 @@
                     roomCode: currentRoom, 
                     selectedPoints: selectedPointsForEnclosure 
                 });
-                return;
+                return; // Online modda frontend'de sıra değiştirme, backend halleder
             }
             
-            // Çevreleme doğrulaması yap
+            // Offline mod için çevreleme doğrulaması
+            console.log('Offline modda çevreleme doğrulanıyor');
             const isValidEnclosure = validateManualEnclosure(selectedPointsForEnclosure);
             
             if (isValidEnclosure) {
@@ -2670,16 +2672,21 @@
 
         // Manuel çevreleme iptal et
         function cancelManualEnclosure() {
+            console.log('cancelManualEnclosure çağrıldı, currentGameMode:', currentGameMode);
+            
             // Online modda çevreleme iptal isteği gönder
             if (currentGameMode === 'online' && currentRoom) {
                 if (!socket) {
                     console.error('Socket bağlantısı yok!');
                     return;
                 }
+                console.log('Online modda çevreleme iptal isteği gönderiliyor');
                 socket.emit('cancelEnclosure', { roomCode: currentRoom });
-                return;
+                return; // Online modda frontend'de sıra değiştirme, backend halleder
             }
             
+            // Offline mod için
+            console.log('Offline modda çevreleme iptal ediliyor');
             resetManualEnclosureMode();
             // Çevreleme iptal edildiğinde sırayı karşı oyuncuya geç
             currentPlayer = currentPlayer === 1 ? 2 : 1;
