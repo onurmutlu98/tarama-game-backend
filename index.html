@@ -2357,12 +2357,6 @@
                 return;
             }
 
-            // Online modda hamle yapıldıysa ve çevreleme modunda değilse başka hamle yapmasını engelle
-            if (isOnlineMode && onlineMoveMade && !manualEnclosureMode) {
-                alert('Bu sırada sadece bir hamle yapabilirsiniz. Sırayı geçin veya çevreleme yapın.');
-                return;
-            }
-
             // Aynı oyuncunun ard arda nokta koymasını engelle - Toplam nokta sayısı kontrolü
             const currentPlayerTotalPoints = currentPlayer === 1 ? player1TotalPoints : player2TotalPoints;
             const otherPlayerTotalPoints = currentPlayer === 1 ? player2TotalPoints : player1TotalPoints;
@@ -3152,48 +3146,25 @@
 
             // Çevreleme event'leri
             socket.on('enclosureStarted', (data) => {
-                if (data.player === getMyPlayerNumber()) {
-                    // Bu oyuncu çevreleme başlattı - çevreleme modunu aktif et
-                    manualEnclosureMode = true;
-                    selectedPointsForEnclosure = [];
-                    hideMoveOptions();
-                    const enclosureModeControls = document.getElementById('enclosure-mode-controls');
-                    enclosureModeControls.style.display = 'block';
-                    updateSelectedPointsInfo();
-                    console.log('Çevreleme modu başlatıldı. Kendi noktalarınızı seçin.');
-                } else {
+                // Çevreleme modu başlat
+                waitingForPlayerAction = false;
+                manualEnclosureMode = true;
+                selectedPointsForEnclosure = [];
+                
+                // Kontrol panellerini değiştir
+                hideMoveOptions();
+                const enclosureModeControls = document.getElementById('enclosure-mode-controls');
+                enclosureModeControls.style.display = 'block';
+                
+                // Bilgi güncelle
+                updateSelectedPointsInfo();
+                
+                if (data.player !== getMyPlayerNumber()) {
                     // Diğer oyuncu çevreleme başlattı
                     console.log(`Oyuncu ${data.player} çevreleme modunu başlattı`);
-                }
-            });
-
-            socket.on('enclosureValidationRequest', (data) => {
-                if (data.player === getMyPlayerNumber()) {
-                    // Bu oyuncunun çevreleme doğrulaması
-                    const isValidEnclosure = validateManualEnclosure(data.selectedPoints);
-                    
-                    if (isValidEnclosure) {
-                        // Geçerli çevreleme - puan ver
-                        processValidEnclosure(data.selectedPoints);
-                        resetManualEnclosureMode();
-                        
-                        // Backend'e başarı bildir
-                        socket.emit('enclosureResult', {
-                            roomCode: currentRoom,
-                            success: true,
-                            message: 'Geçerli çevreleme! Puan alındı.'
-                        });
-                    } else {
-                        // Geçersiz çevreleme
-                        resetManualEnclosureMode();
-                        
-                        // Backend'e hata bildir
-                        socket.emit('enclosureResult', {
-                            roomCode: currentRoom,
-                            success: false,
-                            message: 'Geçersiz çevreleme! Kurallara uygun bir çevreleme yapmalısınız.'
-                        });
-                    }
+                } else {
+                    // Bu oyuncu çevreleme başlattı
+                    console.log('Çevreleme modu başlatıldı. Çevreleme için noktaları seçin.');
                 }
             });
 
@@ -3211,10 +3182,9 @@
                     // Çevreleme başarılı
                     updateGameFromServer(data.gameState);
                     resetManualEnclosureMode();
-                    console.log(data.message || 'Çevreleme başarılı!');
                 } else {
                     // Çevreleme başarısız
-                    alert(data.message || 'Çevreleme başarısız!');
+                    alert(data.message);
                     resetManualEnclosureMode();
                     showMoveOptions();
                 }
