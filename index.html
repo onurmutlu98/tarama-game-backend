@@ -2321,6 +2321,12 @@
                 return;
             }
 
+            // Manuel çevreleme modundaysa nokta seçme işlemi yap (EN ÖNCELİKLİ KONTROL)
+            if (manualEnclosureMode) {
+                handleEnclosurePointSelection(point);
+                return;
+            }
+
             // Online modda hamle gönder
             if (currentGameMode === 'online' && currentRoom) {
                 if (!socket) {
@@ -2348,12 +2354,6 @@
                     showMoveOptions();
                 }, 100);
                 
-                return;
-            }
-
-            // Manuel çevreleme modundaysa nokta seçme işlemi yap
-            if (manualEnclosureMode) {
-                handleEnclosurePointSelection(point);
                 return;
             }
 
@@ -3185,27 +3185,32 @@
                 console.log('getMyPlayerNumber():', getMyPlayerNumber());
                 console.log('data.player:', data.player);
                 
-                // Çevreleme modu başlat
-                waitingForPlayerAction = false;
-                manualEnclosureMode = true;
-                selectedPointsForEnclosure = [];
-                
-                // Kontrol panellerini değiştir
-                hideMoveOptions();
-                const enclosureModeControls = document.getElementById('enclosure-mode-controls');
-                enclosureModeControls.style.display = 'block';
-                
-                // Bilgi güncelle
-                updateSelectedPointsInfo();
-                
                 // Backend playerIndex (0,1) -> Frontend playerNumber (1,2) dönüşümü
                 const frontendPlayerNumber = data.player + 1;
-                if (frontendPlayerNumber !== getMyPlayerNumber()) {
-                    // Diğer oyuncu çevreleme başlattı
-                    console.log(`Oyuncu ${frontendPlayerNumber} çevreleme modunu başlattı`);
-                } else {
-                    // Bu oyuncu çevreleme başlattı
+                
+                // Sadece çevreleme yapan oyuncu için UI kontrollerini aktif et
+                if (frontendPlayerNumber === getMyPlayerNumber()) {
+                    // Bu oyuncu çevreleme başlattı - tam kontrol
+                    console.log('Bu oyuncu çevreleme yapıyor, UI aktif edildi');
+                    waitingForPlayerAction = false;
+                    manualEnclosureMode = true;
+                    selectedPointsForEnclosure = [];
+                    
+                    // Kontrol panellerini değiştir
+                    hideMoveOptions();
+                    const enclosureModeControls = document.getElementById('enclosure-mode-controls');
+                    enclosureModeControls.style.display = 'block';
+                    
+                    // Bilgi güncelle
+                    updateSelectedPointsInfo();
                     console.log('Çevreleme modu başlatıldı. Çevreleme için noktaları seçin.');
+                } else {
+                    // Diğer oyuncu çevreleme başlattı - sadece bilgi göster
+                    console.log('Rakip oyuncu çevreleme yapıyor, UI pasif');
+                    waitingForPlayerAction = false;
+                    hideMoveOptions();
+                    updateInfo(`Oyuncu ${frontendPlayerNumber} çevreleme yapıyor...`);
+                    // manualEnclosureMode'u aktif etme, böylece rakip nokta seçemez
                 }
             });
 
