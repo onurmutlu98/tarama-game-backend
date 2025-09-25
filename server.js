@@ -210,46 +210,52 @@ io.on('connection', (socket) => {
 
     // Çevreleme bitirme
     socket.on('finishEnclosure', (data) => {
+        console.log('finishEnclosure eventi alındı:', data);
         const room = rooms[data.roomCode];
-        if (!room) return;
-        
-        const playerIndex = room.players.findIndex(p => p.id === socket.id);
-        if (playerIndex === -1) return;
-        
-        if (room.gameState.currentPlayer !== playerIndex) return;
-
-        // Çevreleme doğrulaması frontend'de yapılacak
-        // Backend sadece sonucu iletir
-        io.to(data.roomCode).emit('enclosureValidationRequest', {
-            player: playerIndex,
-            selectedPoints: data.selectedPoints
-        });
-    });
-
-    // Çevreleme sonucu bildirme
-    socket.on('enclosureResult', (data) => {
-        const room = rooms[data.roomCode];
-        if (!room) return;
-        
-        const playerIndex = room.players.findIndex(p => p.id === socket.id);
-        if (playerIndex === -1) return;
-        
-        if (data.success) {
-            // Başarılı çevreleme - sırayı değiştir
-            room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        if (!room) {
+            console.log('Oda bulunamadı:', data.roomCode);
+            return;
         }
         
+        const playerIndex = room.players.findIndex(p => p.id === socket.id);
+        if (playerIndex === -1) {
+            console.log('Oyuncu bulunamadı');
+            return;
+        }
+        
+        console.log('Çevreleme isteği - playerIndex:', playerIndex, 'currentPlayer:', room.gameState.currentPlayer);
+        
+        if (room.gameState.currentPlayer !== playerIndex) {
+            console.log('Sıra bu oyuncuda değil');
+            return;
+        }
+
+        // Çevreleme mantığını burada uygula
+        // Şimdilik basit bir onay gönderelim
+        room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        console.log('Çevreleme tamamlandı, yeni currentPlayer:', room.gameState.currentPlayer);
+        
         io.to(data.roomCode).emit('enclosureFinished', {
-            success: data.success,
-            message: data.message,
+            success: true,
             gameState: room.gameState
         });
+        
+        console.log('enclosureFinished eventi gönderildi');
     });
 
     // Çevreleme iptal etme
     socket.on('cancelEnclosure', (data) => {
+        console.log('Çevreleme iptal edildi:', data);
         const room = rooms[data.roomCode];
         if (!room) return;
+        
+        const playerIndex = room.players.findIndex(p => p.id === socket.id);
+        if (playerIndex === -1) return;
+        
+        // Çevreleme iptal edildiğinde sırayı karşı oyuncuya geç
+        console.log('Önceki currentPlayer:', room.gameState.currentPlayer);
+        room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
+        console.log('Yeni currentPlayer:', room.gameState.currentPlayer);
         
         io.to(data.roomCode).emit('enclosureCancelled', {
             currentPlayer: room.gameState.currentPlayer
