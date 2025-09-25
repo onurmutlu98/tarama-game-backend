@@ -2622,6 +2622,9 @@
 
         // Manuel çevreleme bitir
         function finishManualEnclosure() {
+            console.log('finishManualEnclosure çağrıldı');
+            console.log('Seçilen nokta sayısı:', selectedPointsForEnclosure.length);
+            
             if (selectedPointsForEnclosure.length < 4) {
                 alert('Çevreleme için en az 4 nokta seçmelisiniz!');
                 return;
@@ -2633,6 +2636,10 @@
                     console.error('Socket bağlantısı yok!');
                     return;
                 }
+                console.log('Online modda çevreleme bitirme isteği gönderiliyor:', {
+                    roomCode: currentRoom,
+                    selectedPoints: selectedPointsForEnclosure
+                });
                 socket.emit('finishEnclosure', { 
                     roomCode: currentRoom, 
                     selectedPoints: selectedPointsForEnclosure 
@@ -2723,8 +2730,10 @@
 
         // Çevreleme modunda nokta seçme işlemi
         function handleEnclosurePointSelection(point) {
+            console.log('handleEnclosurePointSelection çağrıldı');
             const row = parseInt(point.dataset.row);
             const col = parseInt(point.dataset.col);
+            console.log(`Seçilen nokta: (${col}, ${row})`);
             
             // Etkisiz noktaları seçmeyi engelle
             if (point.classList.contains('disabled')) {
@@ -2738,13 +2747,35 @@
                 return;
             }
             
-            // Sadece kendi rengindeki noktaları seçebilir
-            const isCurrentPlayerPoint = (currentPlayer === 1 && point.classList.contains('blue')) ||
-                                        (currentPlayer === 2 && point.classList.contains('red'));
-            
-            if (!isCurrentPlayerPoint) {
-                alert('Sadece kendi renginizdeki noktaları seçebilirsiniz!');
-                return;
+            // Online modda oyuncu kontrolü - backend playerIndex (0,1) ile frontend currentPlayer (1,2) uyumu
+            if (currentGameMode === 'online') {
+                // Backend'den gelen currentPlayer (0,1) -> Frontend currentPlayer (1,2) dönüşümü yapıldı
+                const myPlayerNumber = getMyPlayerNumber(); // 1 veya 2
+                console.log('Online mod - myPlayerNumber:', myPlayerNumber, 'currentPlayer:', currentPlayer);
+                
+                // Sadece kendi sıramda çevreleme yapabilirim
+                if (currentPlayer !== myPlayerNumber) {
+                    alert('Sıra sizde değil!');
+                    return;
+                }
+                
+                // Sadece kendi rengindeki noktaları seçebilir
+                const isCurrentPlayerPoint = (myPlayerNumber === 1 && point.classList.contains('blue')) ||
+                                            (myPlayerNumber === 2 && point.classList.contains('red'));
+                
+                if (!isCurrentPlayerPoint) {
+                    alert('Sadece kendi renginizdeki noktaları seçebilirsiniz!');
+                    return;
+                }
+            } else {
+                // Offline modda normal kontrol
+                const isCurrentPlayerPoint = (currentPlayer === 1 && point.classList.contains('blue')) ||
+                                            (currentPlayer === 2 && point.classList.contains('red'));
+                
+                if (!isCurrentPlayerPoint) {
+                    alert('Sadece kendi renginizdeki noktaları seçebilirsiniz!');
+                    return;
+                }
             }
             
             const coord = { x: col, y: row };
@@ -2754,10 +2785,12 @@
                 // Nokta seçili değil, seç
                 selectedPointsForEnclosure.push(coord);
                 point.classList.add('selected');
+                console.log('Nokta seçildi:', coord);
             } else {
                 // Nokta zaten seçili, seçimi kaldır
                 selectedPointsForEnclosure.splice(coordIndex, 1);
                 point.classList.remove('selected');
+                console.log('Nokta seçimi kaldırıldı:', coord);
             }
             
             updateSelectedPointsInfo();
@@ -3148,6 +3181,10 @@
 
             // Çevreleme event'leri
             socket.on('enclosureStarted', (data) => {
+                console.log('enclosureStarted eventi alındı:', data);
+                console.log('getMyPlayerNumber():', getMyPlayerNumber());
+                console.log('data.player:', data.player);
+                
                 // Çevreleme modu başlat
                 waitingForPlayerAction = false;
                 manualEnclosureMode = true;
@@ -3161,9 +3198,11 @@
                 // Bilgi güncelle
                 updateSelectedPointsInfo();
                 
-                if (data.player !== getMyPlayerNumber()) {
+                // Backend playerIndex (0,1) -> Frontend playerNumber (1,2) dönüşümü
+                const frontendPlayerNumber = data.player + 1;
+                if (frontendPlayerNumber !== getMyPlayerNumber()) {
                     // Diğer oyuncu çevreleme başlattı
-                    console.log(`Oyuncu ${data.player} çevreleme modunu başlattı`);
+                    console.log(`Oyuncu ${frontendPlayerNumber} çevreleme modunu başlattı`);
                 } else {
                     // Bu oyuncu çevreleme başlattı
                     console.log('Çevreleme modu başlatıldı. Çevreleme için noktaları seçin.');
@@ -3182,12 +3221,15 @@
             });
 
             socket.on('enclosureFinished', (data) => {
+                console.log('enclosureFinished eventi alındı:', data);
                 if (data.success) {
                     // Çevreleme başarılı
+                    console.log('Çevreleme başarılı, gameState güncelleniyor');
                     updateGameFromServer(data.gameState);
                     resetManualEnclosureMode();
                 } else {
                     // Çevreleme başarısız
+                    console.log('Çevreleme başarısız:', data.message);
                     alert(data.message);
                     resetManualEnclosureMode();
                     showMoveOptions();
