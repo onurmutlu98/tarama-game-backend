@@ -208,6 +208,122 @@ io.on('connection', (socket) => {
         });
     });
 
+    // Çevreleme validasyon fonksiyonları
+    function areNeighbors(x1, y1, x2, y2) {
+        const dx = Math.abs(x1 - x2);
+        const dy = Math.abs(y1 - y2);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        // Kenar uzunluğu kuralı: sadece 1 birim (yatay/dikey) veya √2 birim (çapraz)
+        return Math.abs(distance - 1) < 0.001 || Math.abs(distance - Math.sqrt(2)) < 0.001;
+    }
+
+    function arePointsConnected(points) {
+        if (points.length < 2) return false;
+        
+        // Her nokta en az bir diğer noktaya komşu olmalı
+        for (let i = 0; i < points.length; i++) {
+            let hasNeighbor = false;
+            for (let j = 0; j < points.length; j++) {
+                if (i !== j && areNeighbors(points[i].x, points[i].y, points[j].x, points[j].y)) {
+                    hasNeighbor = true;
+                    break;
+                }
+            }
+            if (!hasNeighbor) return false;
+        }
+        return true;
+    }
+
+    function formsClosedShape(points) {
+        if (points.length < 4) return false;
+        
+        // Her nokta en az 2 komşuya sahip olmalı (kapalı şekil için)
+        for (let i = 0; i < points.length; i++) {
+            let neighborCount = 0;
+            for (let j = 0; j < points.length; j++) {
+                if (i !== j && areNeighbors(points[i].x, points[i].y, points[j].x, points[j].y)) {
+                    neighborCount++;
+                }
+            }
+            if (neighborCount < 2) return false;
+        }
+        return true;
+    }
+
+    function isPointInPolygon(x, y, polygon) {
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            if (((polygon[i].y > y) !== (polygon[j].y > y)) &&
+                (x < (polygon[j].x - polygon[i].x) * (y - polygon[i].y) / (polygon[j].y - polygon[i].y) + polygon[i].x)) {
+                inside = !inside;
+            }
+        }
+        return inside;
+    }
+
+    function getEnclosedPoints(selectedPoints, gameBoard) {
+        const enclosedPoints = [];
+        
+        // Grid üzerindeki tüm noktaları kontrol et
+        for (let row = 0; row < 20; row++) {
+            for (let col = 0; col < 20; col++) {
+                if (isPointInPolygon(col, row, selectedPoints)) {
+                    enclosedPoints.push({x: col, y: row});
+                }
+            }
+        }
+        
+        return enclosedPoints;
+    }
+
+    function validateEnclosure(selectedPoints, gameBoard, currentPlayer) {
+        console.log('Çevreleme validasyonu başlıyor...');
+        
+        // 1. Minimum nokta sayısı kontrolü
+        if (selectedPoints.length < 4) {
+            console.log('Yetersiz nokta sayısı:', selectedPoints.length);
+            return { valid: false, message: 'Çevreleme için en az 4 nokta seçmelisiniz!' };
+        }
+        
+        // 2. Noktaların bağlantılı olup olmadığını kontrol et
+        if (!arePointsConnected(selectedPoints)) {
+            console.log('Noktalar bağlantılı değil');
+            return { valid: false, message: 'Seçilen noktalar birbirine bağlantılı olmalıdır!' };
+        }
+        
+        // 3. Kapalı şekil kontrolü
+        if (!formsClosedShape(selectedPoints)) {
+            console.log('Kapalı şekil oluşturmuyor');
+            return { valid: false, message: 'Seçilen noktalar kapalı bir şekil oluşturmalıdır!' };
+        }
+        
+        // 4. Çevrelenen alanın içinde rakip noktalar olup olmadığını kontrol et
+        const enclosedPoints = getEnclosedPoints(selectedPoints, gameBoard);
+        const opponentPlayer = 1 - currentPlayer;
+        
+        let hasOpponentPoints = false;
+        let enclosedOpponentCount = 0;
+        
+        for (const point of enclosedPoints) {
+            if (gameBoard[point.y] && gameBoard[point.y][point.x] === opponentPlayer) {
+                hasOpponentPoints = true;
+                enclosedOpponentCount++;
+            }
+        }
+        
+        if (!hasOpponentPoints) {
+            console.log('Çevrelenen alanda rakip nokta yok');
+            return { valid: false, message: 'Çevreleme geçerli olması için rakip noktaları içermelidir!' };
+        }
+        
+        console.log('Çevreleme geçerli! Çevrelenen rakip nokta sayısı:', enclosedOpponentCount);
+        return { 
+            valid: true, 
+            enclosedPoints: enclosedPoints,
+            enclosedOpponentCount: enclosedOpponentCount
+        };
+    }
+
     // Çevreleme bitirme
     socket.on('finishEnclosure', (data) => {
         console.log('finishEnclosure eventi alındı:', data);
@@ -227,17 +343,62 @@ io.on('connection', (socket) => {
         
         if (room.gameState.currentPlayer !== playerIndex) {
             console.log('Sıra bu oyuncuda değil');
+            socket.emit('enclosureFinished', {
+                success: false,
+                message: 'Sıra sizde değil!'
+            });
             return;
         }
 
-        // Çevreleme mantığını burada uygula
-        // Şimdilik basit bir onay gönderelim
+        // Tam çevreleme doğrulaması
+        const validation = validateEnclosure(data.selectedPoints, room.gameState.board, playerIndex);
+        
+        if (!validation.valid) {
+            console.log('Çevreleme geçersiz:', validation.message);
+            socket.emit('enclosureFinished', {
+                success: false,
+                message: validation.message
+            });
+            return;
+        }
+
+        // Geçerli çevreleme - puan ver ve sırayı değiştir
+        console.log('Çevreleme geçerli! Puan veriliyor...');
+        
+        // Puan sistemi ekle
+        if (!room.gameState.scores) {
+            room.gameState.scores = [0, 0]; // [player0, player1]
+        }
+        
+        room.gameState.scores[playerIndex] += validation.enclosedOpponentCount;
+        
+        // Çevrelenen rakip noktaları etkisiz hale getir
+        if (!room.gameState.disabledPoints) {
+            room.gameState.disabledPoints = [];
+        }
+        
+        const opponentPlayer = 1 - playerIndex;
+        for (const point of validation.enclosedPoints) {
+            if (room.gameState.board[point.y] && room.gameState.board[point.y][point.x] === opponentPlayer) {
+                room.gameState.disabledPoints.push({
+                    x: point.x,
+                    y: point.y,
+                    player: opponentPlayer
+                });
+            }
+        }
+        
+        // Sırayı değiştir
         room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
         console.log('Çevreleme tamamlandı, yeni currentPlayer:', room.gameState.currentPlayer);
+        console.log('Güncel skorlar:', room.gameState.scores);
         
         io.to(data.roomCode).emit('enclosureFinished', {
             success: true,
-            gameState: room.gameState
+            gameState: room.gameState,
+            enclosedPoints: data.selectedPoints,
+            score: validation.enclosedOpponentCount,
+            totalScores: room.gameState.scores
         });
         
         console.log('enclosureFinished eventi gönderildi');
@@ -252,10 +413,11 @@ io.on('connection', (socket) => {
         const playerIndex = room.players.findIndex(p => p.id === socket.id);
         if (playerIndex === -1) return;
         
-        // Çevreleme iptal edildiğinde sırayı karşı oyuncuya geç
-        console.log('Önceki currentPlayer:', room.gameState.currentPlayer);
+        console.log('Çevreleme iptal - playerIndex:', playerIndex, 'currentPlayer:', room.gameState.currentPlayer);
+        
+        // Çevreleme iptal edildiğinde sırayı karşı oyuncuya geç (yerel oyun kuralları ile aynı)
         room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
-        console.log('Yeni currentPlayer:', room.gameState.currentPlayer);
+        console.log('Çevreleme iptal edildi, yeni currentPlayer:', room.gameState.currentPlayer);
         
         io.to(data.roomCode).emit('enclosureCancelled', {
             currentPlayer: room.gameState.currentPlayer
