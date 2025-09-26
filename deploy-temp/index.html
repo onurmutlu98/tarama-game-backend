@@ -3016,10 +3016,12 @@
             const opponentPlayer = currentPlayer === 1 ? 2 : 1;
             console.log('Rakip oyuncu:', opponentPlayer, 'Mevcut oyuncu:', currentPlayer);
             
-            // Puan hesapla
+            // Puan hesapla - sadece rakip noktaları etkisiz hale getir, kendi noktalarını değil
             let score = 0;
             enclosedPoints.forEach(point => {
                 console.log(`Nokta kontrol ediliyor: (${point.x}, ${point.y}), gameBoard değeri:`, gameBoard[point.y] ? gameBoard[point.y][point.x] : 'undefined');
+                
+                // Sadece rakip noktaları işle, kendi noktalarını etkisiz hale getirme
                 if (gameBoard[point.y] && gameBoard[point.y][point.x] === opponentPlayer) {
                     // Etkisiz nokta kontrolü - etkisiz noktalar skora katkı yapmasın
                     const isAlreadyDisabled = disabledPoints.some(dp => 
@@ -3063,6 +3065,13 @@
                         // Etkisiz noktalar listesine ekle (player: 0 = boş nokta)
                         disabledPoints.push({ x: point.x, y: point.y, player: 0 });
                     }
+                }
+                
+                // Kendi noktalarını etkisiz hale getirme - bu önemli!
+                // Eğer çevrelenen nokta kendi noktamızsa, hiçbir şey yapma
+                else if (gameBoard[point.y] && gameBoard[point.y][point.x] === currentPlayer) {
+                    console.log(`Kendi nokta bulundu: (${point.x}, ${point.y}) - etkisiz hale getirilmeyecek`);
+                    // Hiçbir şey yapma - kendi noktalarımızı etkisiz hale getirme
                 }
             });
             

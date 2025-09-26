@@ -3020,6 +3020,8 @@
             let score = 0;
             enclosedPoints.forEach(point => {
                 console.log(`Nokta kontrol ediliyor: (${point.x}, ${point.y}), gameBoard değeri:`, gameBoard[point.y] ? gameBoard[point.y][point.x] : 'undefined');
+                
+                // SADECE RAKIP OYUNCUNUN NOKTALARI için puan ver ve etkisiz yap
                 if (gameBoard[point.y] && gameBoard[point.y][point.x] === opponentPlayer) {
                     // Etkisiz nokta kontrolü - etkisiz noktalar skora katkı yapmasın
                     const isAlreadyDisabled = disabledPoints.some(dp => 
@@ -3036,7 +3038,9 @@
                         const pointElement = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
                         if (pointElement) {
                             pointElement.classList.add('disabled');
-                            console.log('Nokta etkisiz hale getirildi:', pointElement);
+                            pointElement.style.opacity = '0.3';
+                            pointElement.style.cursor = 'not-allowed';
+                            console.log('Rakip nokta etkisiz hale getirildi:', pointElement);
                         }
                         
                         // Etkisiz noktalar listesine ekle
@@ -3063,6 +3067,13 @@
                         // Etkisiz noktalar listesine ekle (player: 0 = boş nokta)
                         disabledPoints.push({ x: point.x, y: point.y, player: 0 });
                     }
+                }
+                
+                // KENDİ NOKTALARI ASLA ETKİSİZ HALE GETİRİLMEZ!
+                // Çevreleme yapan oyuncunun kendi noktaları çevreleme sınırı içinde kalsa bile aktif kalır
+                else if (gameBoard[point.y] && gameBoard[point.y][point.x] === currentPlayer) {
+                    console.log(`Kendi nokta tespit edildi: (${point.x}, ${point.y}) - ETKİSİZ YAPILMAYACAK`);
+                    // Hiçbir şey yapma - kendi noktalar aktif kalır
                 }
             });
             
