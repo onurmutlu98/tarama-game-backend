@@ -3256,17 +3256,15 @@
                 const newCurrentPlayer = data.currentPlayer + 1;
                 console.log('Yeni currentPlayer:', newCurrentPlayer);
                 
-                // Eğer sıra bu oyuncuya geçtiyse, hamle yapabilir
-                if (newCurrentPlayer === getMyPlayerNumber()) {
-                    onlineMoveMade = false; // Bu oyuncu artık hamle yapabilir
-                }
-                
                 currentPlayer = newCurrentPlayer;
                 updateCurrentPlayerDisplay();
                 resetManualEnclosureMode();
                 waitingForPlayerAction = false;
                 
-                console.log('Çevreleme iptal edildi, yeni oyuncu hamle yapabilir');
+                // Çevreleme iptal edildiğinde sıra geçer, yeni oyuncu hamle yapabilir
+                onlineMoveMade = false;
+                
+                console.log('Çevreleme iptal edildi, sıra geçti ve yeni oyuncu hamle yapabilir');
             });
         }
 
