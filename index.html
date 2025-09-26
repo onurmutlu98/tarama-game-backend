@@ -3253,13 +3253,18 @@
                 console.log('Önceki currentPlayer:', currentPlayer);
                 
                 // Backend currentPlayer (0,1) -> Frontend currentPlayer (1,2) dönüşümü
-                currentPlayer = data.currentPlayer + 1;
-                console.log('Yeni currentPlayer:', currentPlayer);
+                const newCurrentPlayer = data.currentPlayer + 1;
+                console.log('Yeni currentPlayer:', newCurrentPlayer);
                 
+                // Eğer sıra bu oyuncuya geçtiyse, hamle yapabilir
+                if (newCurrentPlayer === getMyPlayerNumber()) {
+                    onlineMoveMade = false; // Bu oyuncu artık hamle yapabilir
+                }
+                
+                currentPlayer = newCurrentPlayer;
                 updateCurrentPlayerDisplay();
                 resetManualEnclosureMode();
                 waitingForPlayerAction = false;
-                onlineMoveMade = false; // Yeni sıra başladığında hamle hakkını sıfırla
                 
                 console.log('Çevreleme iptal edildi, yeni oyuncu hamle yapabilir');
             });
