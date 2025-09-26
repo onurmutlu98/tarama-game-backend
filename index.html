@@ -2098,9 +2098,22 @@
             return allPoints.filter(point => !isPointDisabled(point.x, point.y, player));
         }
 
-        // Etkisiz noktaları görsel olarak güncelle - Artık kullanılmıyor
+        // Etkisiz noktaları görsel olarak güncelle
         function updateDisabledPointsDisplay() {
-            // Bu fonksiyon artık boş - UI kaldırıldı
+            // Tüm etkisiz noktaları görsel olarak güncelle
+            disabledPoints.forEach(dp => {
+                const gridPoint = document.querySelector(`[data-row="${dp.y}"][data-col="${dp.x}"]`);
+                if (gridPoint) {
+                    gridPoint.classList.add('disabled');
+                    
+                    // Boş nokta ise özel stil uygula
+                    if (dp.player === 0) {
+                        gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                        gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
+                        gridPoint.style.cursor = 'not-allowed';
+                    }
+                }
+            });
         }
 
         // Aktif nokta sayılarını güncelleme fonksiyonu
@@ -2133,6 +2146,26 @@
             if (redCountElement) {
                 redCountElement.textContent = `🔴 Kırmızı: ${redCount}`;
             }
+        }
+
+        // Çevreleme ses efekti
+        function playEnclosureSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(900, audioContext.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
         }
 
         // Skorları güncelle
@@ -3238,6 +3271,28 @@
                     // Çevreleme başarılı
                     console.log('Çevreleme başarılı, gameState güncelleniyor');
                     updateGameFromServer(data.gameState);
+                    
+                    // Puan güncelleme
+                    if (data.totalScores) {
+                        player1Score = data.totalScores[0];
+                        player2Score = data.totalScores[1];
+                        updateScoreDisplay();
+                        console.log('Skorlar güncellendi:', data.totalScores);
+                    }
+                    
+                    // Çevreleme başarı mesajı
+                    if (data.score > 0) {
+                        const playerName = (currentPlayer === 1) ? 'Oyuncu 1 (Mavi)' : 'Oyuncu 2 (Kırmızı)';
+                        updateInfo(`${playerName} ${data.score} puan kazandı! Çevreleme başarılı.`);
+                        playEnclosureSound();
+                    }
+                    
+                    // Etkisiz noktaları güncelle
+                    if (data.gameState.disabledPoints) {
+                        disabledPoints = data.gameState.disabledPoints;
+                        updateDisabledPointsDisplay();
+                    }
+                    
                     resetManualEnclosureMode();
                 } else {
                     // Çevreleme başarısız
