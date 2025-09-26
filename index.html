@@ -2100,17 +2100,32 @@
 
         // Etkisiz noktaları görsel olarak güncelle
         function updateDisabledPointsDisplay() {
-            // Tüm etkisiz noktaları görsel olarak güncelle
+            // Tüm etkisiz noktaları görsel olarak güncelle - SADECE rakip ve boş noktaları
             disabledPoints.forEach(dp => {
                 const gridPoint = document.querySelector(`[data-row="${dp.y}"][data-col="${dp.x}"]`);
                 if (gridPoint) {
-                    gridPoint.classList.add('disabled');
+                    // Kendi noktalarımızı etkisiz hale getirme kontrolü
+                    const currentPlayerIndex = currentPlayer - 1; // Frontend (1,2) -> Backend (0,1) dönüşümü
                     
-                    // Boş nokta ise özel stil uygula
-                    if (dp.player === 0) {
-                        gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
-                        gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
-                        gridPoint.style.cursor = 'not-allowed';
+                    // Sadece rakip noktaları ve boş noktaları etkisiz hale getir
+                    if (dp.player !== currentPlayerIndex) {
+                        gridPoint.classList.add('disabled');
+                        
+                        // Boş nokta ise özel stil uygula
+                        if (dp.player === 0) {
+                            gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                            gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
+                            gridPoint.style.cursor = 'not-allowed';
+                        }
+                        // Rakip oyuncunun noktası ise opacity düşür
+                        else {
+                            gridPoint.style.opacity = '0.3';
+                            gridPoint.style.cursor = 'not-allowed';
+                        }
+                    }
+                    // Kendi noktalarımızı etkisiz hale getirme - log mesajı
+                    else {
+                        console.log(`updateDisabledPointsDisplay: Kendi nokta korundu: (${dp.x}, ${dp.y}) - player: ${dp.player}, currentPlayer: ${currentPlayerIndex}`);
                     }
                 }
             });
