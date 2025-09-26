@@ -3321,27 +3321,38 @@
                         playEnclosureSound();
                     }
                     
-                    // Etkisiz noktaları güncelle
+                    // Etkisiz noktaları güncelle - sadece rakip ve boş noktaları görsel olarak etkisiz hale getir
                     if (data.gameState.disabledPoints) {
                         disabledPoints = data.gameState.disabledPoints;
                         updateDisabledPointsDisplay();
                         
                         // Online oyunda da etkisiz noktaları görsel olarak güncelle
+                        // SADECE rakip ve boş noktaları etkisiz hale getir, kendi noktalarını değil
                         data.gameState.disabledPoints.forEach(dp => {
                             const gridPoint = document.querySelector(`[data-row="${dp.y}"][data-col="${dp.x}"]`);
                             if (gridPoint) {
-                                gridPoint.classList.add('disabled');
+                                // Kendi noktalarımızı etkisiz hale getirme kontrolü
+                                const currentPlayerIndex = currentPlayer - 1; // Frontend (1,2) -> Backend (0,1) dönüşümü
                                 
-                                // Rakip oyuncunun noktası ise opacity düşür
-                                if (dp.player !== 0) {
-                                    gridPoint.style.opacity = '0.3';
-                                    gridPoint.style.cursor = 'not-allowed';
+                                // Sadece rakip noktaları ve boş noktaları etkisiz hale getir
+                                if (dp.player !== currentPlayerIndex) {
+                                    gridPoint.classList.add('disabled');
+                                    
+                                    // Rakip oyuncunun noktası ise opacity düşür
+                                    if (dp.player !== 0) {
+                                        gridPoint.style.opacity = '0.3';
+                                        gridPoint.style.cursor = 'not-allowed';
+                                    }
+                                    // Boş nokta ise özel stil uygula
+                                    else {
+                                        gridPoint.style.backgroundColor = '#ccffcc';
+                                        gridPoint.style.border = '2px solid #66cc66';
+                                        gridPoint.style.cursor = 'not-allowed';
+                                    }
                                 }
-                                // Boş nokta ise özel stil uygula
+                                // Kendi noktalarımızı etkisiz hale getirme - log mesajı
                                 else {
-                                    gridPoint.style.backgroundColor = '#ccffcc';
-                                    gridPoint.style.border = '2px solid #66cc66';
-                                    gridPoint.style.cursor = 'not-allowed';
+                                    console.log(`Kendi nokta korundu: (${dp.x}, ${dp.y}) - player: ${dp.player}, currentPlayer: ${currentPlayerIndex}`);
                                 }
                             }
                         });
