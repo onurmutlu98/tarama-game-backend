@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="socket-server">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/.netlify/functions/socket-server.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
