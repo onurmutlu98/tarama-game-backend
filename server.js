@@ -92,7 +92,9 @@ io.on('connection', (socket) => {
                 currentPlayer: 0,
                 gameStarted: false,
                 gameEnded: false,
-                winner: null
+                winner: null,
+                scores: [0, 0], // Oyuncu skorlarını başlat
+                disabledPoints: [] // Etkisiz noktaları başlat
             },
             createdAt: new Date(),
             lastActivity: new Date()
@@ -380,11 +382,33 @@ io.on('connection', (socket) => {
         const opponentPlayer = 1 - playerIndex;
         for (const point of validation.enclosedPoints) {
             if (room.gameState.board[point.y] && room.gameState.board[point.y][point.x] === opponentPlayer) {
-                room.gameState.disabledPoints.push({
-                    x: point.x,
-                    y: point.y,
-                    player: opponentPlayer
-                });
+                // Rakip nokta zaten etkisiz mi kontrol et
+                const alreadyDisabled = room.gameState.disabledPoints.some(dp =>
+                    dp.x === point.x && dp.y === point.y && dp.player === opponentPlayer
+                );
+                
+                if (!alreadyDisabled) {
+                    room.gameState.disabledPoints.push({
+                        x: point.x,
+                        y: point.y,
+                        player: opponentPlayer
+                    });
+                }
+            }
+            // Çevrelenen alandaki boş noktaları da etkisiz hale getir (local oyundaki gibi)
+            else if (room.gameState.board[point.y] && room.gameState.board[point.y][point.x] === 0) {
+                // Boş nokta zaten etkisiz mi kontrol et
+                const alreadyDisabled = room.gameState.disabledPoints.some(dp =>
+                    dp.x === point.x && dp.y === point.y && dp.player === 0
+                );
+                
+                if (!alreadyDisabled) {
+                    room.gameState.disabledPoints.push({
+                        x: point.x,
+                        y: point.y,
+                        player: 0 // 0 = boş nokta etkisiz
+                    });
+                }
             }
         }
         
@@ -455,7 +479,9 @@ io.on('connection', (socket) => {
             currentPlayer: 0,
             gameStarted: false,
             gameEnded: false,
-            winner: null
+            winner: null,
+            scores: [0, 0], // Oyuncu skorlarını sıfırla
+            disabledPoints: [] // Etkisiz noktaları sıfırla
         };
         
         // Oyuncuları hazır değil yap
