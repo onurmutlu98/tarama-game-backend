@@ -1,29 +1,54 @@
-# Çevreleme Oyunu (Enclosure Game)
+# Tarama Game Backend
 
-Modern ve interaktif bir çevreleme oyunu. İki oyuncu sırayla noktalara tıklayarak çevreleme yapmaya çalışır.
+Bu backend server, Tarama Grid oyununun çok oyunculu özelliklerini sağlar.
 
 ## Özellikler
 
-- 🎮 **12x12 Grid** - Optimize edilmiş oyun alanı
-- ⚡ **Hızlı Performans** - Akıcı oynanış
-- 🎯 **Akıllı Çevreleme** - Otomatik çevreleme tespiti
-- 📊 **Canlı Skor** - Anlık puan takibi
-- 🎨 **Modern UI** - Güzel ve kullanıcı dostu arayüz
+- Socket.IO ile gerçek zamanlı iletişim
+- Oda oluşturma ve katılma
+- Oyuncu durumu yönetimi
+- Oyun mantığı
+- Otomatik oda temizleme
+- Health check endpoint'i
 
-## Nasıl Oynanır
+## Deployment
 
-1. Oyuncular sırayla grid üzerindeki noktalara tıklar
-2. Mavi oyuncu ve Kırmızı oyuncu dönüşümlü oynار
-3. 4 veya daha fazla nokta ile çevreleme yapıldığında puan kazanılır
-4. Çevrelenen rakip noktalar etkisiz hale gelir
-5. En fazla puan alan oyuncu kazanır
+### Render.com'da Deploy Etme
 
-## Teknoloji
+1. GitHub'a kod yükle
+2. Render.com'da yeni Web Service oluştur
+3. GitHub repo'sunu bağla
+4. Build Command: `npm install`
+5. Start Command: `npm start`
+6. Environment: Node
 
-- Pure HTML5, CSS3, JavaScript
-- Responsive tasarım
-- Modern browser desteği
+### Environment Variables
 
-## Deploy
+- `PORT`: Server portu (otomatik ayarlanır)
 
-Bu oyun Netlify üzerinde deploy edilebilir.
+## API Endpoints
+
+- `GET /`: Server durumu
+- `GET /health`: Detaylı sağlık kontrolü
+
+## Socket Events
+
+### Client to Server
+- `createRoom`: Oda oluştur
+- `joinRoom`: Odaya katıl
+- `toggleReady`: Hazır durumu değiştir
+- `makeMove`: Oyun hamlesi
+- `startEnclosure`: Çevreleme başlat
+- `finishEnclosure`: Çevreleme bitir
+- `cancelEnclosure`: Çevreleme iptal et
+- `passTurn`: Sıra geç
+- `restartGame`: Oyunu yeniden başlat
+
+### Server to Client
+- `roomCreated`: Oda oluşturuldu
+- `roomJoined`: Odaya katıldı
+- `playersUpdate`: Oyuncu listesi güncellendi
+- `gameStarted`: Oyun başladı
+- `gameUpdate`: Oyun durumu güncellendi
+- `error`: Hata mesajı
+>>>>>>> 38552ec6ab9d55687e755a269b215bb0a84a354a
