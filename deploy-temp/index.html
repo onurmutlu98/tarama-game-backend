@@ -2116,30 +2116,39 @@
             disabledPoints.forEach(dp => {
                 const gridPoint = document.querySelector(`[data-row="${dp.y}"][data-col="${dp.x}"]`);
                 if (gridPoint) {
-                    const currentPlayerIndex = currentPlayer - 1; // Frontend (1,2) -> Backend (0,1) dönüşümü
-                    
-                    // ÖNEMLİ: Etkisiz noktalar KALICI olmalı - currentPlayer'a bakılmaksızın
-                    // Sadece etkisiz olarak işaretlenmiş noktaları görsel olarak etkisiz hale getir
-                    gridPoint.classList.add('disabled');
-                    
-                    // Backend player değerlerini frontend değerlerine dönüştür
-                    // Backend: 0,1 -> Frontend: 1,2 (0 = boş nokta)
-                    const frontendPlayerValue = dp.player === 0 ? 0 : dp.player + 1;
-                    
-                    // Boş nokta ise özel stil uygula
-                    if (dp.player === null || dp.player === 0) {
-                        gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
-                        gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
-                        gridPoint.style.cursor = 'not-allowed';
-                        gridPoint.style.pointerEvents = 'none'; // Tıklamayı tamamen engelle
-                        console.log(`✓ Boş nokta etkisiz görüntülendi: (${dp.x}, ${dp.y})`);
+                    // Backend player değerlerini frontend player değerlerine dönüştür
+                    // Backend: 0=mavi, 1=kırmızı | Frontend: 1=mavi, 2=kırmızı
+                    let frontendPlayer = dp.player;
+                    if (dp.player !== null && dp.player !== 0) {
+                        frontendPlayer = dp.player + 1; // 0->1, 1->2 dönüşümü
                     }
-                    // Oyuncu noktası ise opacity düşür
+                    
+                    const myPlayerNumber = getMyPlayerNumber();
+                    console.log(`updateDisabledPointsDisplay: Nokta (${dp.x}, ${dp.y}) - backend player: ${dp.player}, frontend player: ${frontendPlayer}, myPlayer: ${myPlayerNumber}`);
+                    
+                    // Sadece rakip noktaları ve boş noktaları etkisiz hale getir
+                    if (dp.player === 0 || frontendPlayer !== myPlayerNumber) {
+                        gridPoint.classList.add('disabled');
+                        
+                        // Boş nokta ise özel stil uygula (backend'te 0 olarak saklanıyor)
+                        if (dp.player === null || dp.player === 0) {
+                            gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                            gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
+                            gridPoint.style.cursor = 'not-allowed';
+                            gridPoint.style.pointerEvents = 'none';
+                            console.log(`✓ Boş nokta etkisiz hale getirildi: (${dp.x}, ${dp.y})`);
+                        }
+                        // Rakip oyuncunun noktası ise opacity düşür
+                        else {
+                            gridPoint.style.opacity = '0.3';
+                            gridPoint.style.cursor = 'not-allowed';
+                            gridPoint.style.pointerEvents = 'none';
+                            console.log(`✓ Rakip nokta etkisiz hale getirildi: (${dp.x}, ${dp.y}) - backend player: ${dp.player}, frontend player: ${frontendPlayer}`);
+                        }
+                    }
+                    // Kendi noktalarımızı etkisiz hale getirme - log mesajı
                     else {
-                        gridPoint.style.opacity = '0.3';
-                        gridPoint.style.cursor = 'not-allowed';
-                        gridPoint.style.pointerEvents = 'none'; // Tıklamayı tamamen engelle
-                        console.log(`✓ Oyuncu noktası etkisiz görüntülendi: (${dp.x}, ${dp.y}) - backend player: ${dp.player}, frontend player: ${frontendPlayerValue}`);
+                        console.log(`✓ Kendi nokta korundu: (${dp.x}, ${dp.y}) - backend player: ${dp.player}, frontend player: ${frontendPlayer}, myPlayer: ${myPlayerNumber}`);
                     }
                 }
             });
