@@ -2327,13 +2327,8 @@
             gridPoints.forEach(point => {
                 point.className = 'grid-point';
                 // Inline style'ları da temizle (çevrelenmiş yeşil boş noktalar için)
-                // YEŞİL NOKTALARIN RENGİNİ KORUMAK İÇİN KONTROL
-                if (point.style.backgroundColor !== '#ccffcc') {
-                    point.style.backgroundColor = '';
-                }
-                if (point.style.border !== '2px solid #66cc66') {
-                    point.style.border = '';
-                }
+                point.style.backgroundColor = '';
+                point.style.border = '';
             });
 
             // UI'yi sıfırla
@@ -2599,13 +2594,8 @@
             const gridPoints = document.querySelectorAll('.grid-point');
             gridPoints.forEach(point => {
                 point.className = 'grid-point';
-                // YEŞİL NOKTALARIN RENGİNİ KORUMAK İÇİN KONTROL
-                if (point.style.backgroundColor !== '#ccffcc') {
-                    point.style.backgroundColor = '';
-                }
-                if (point.style.border !== '2px solid #66cc66') {
-                    point.style.borderColor = '';
-                }
+                point.style.backgroundColor = '';
+                point.style.borderColor = '';
                 point.style.opacity = '';
             });
             
@@ -3055,8 +3045,6 @@
             console.log('Çevrelenen noktalar:', enclosedPoints);
             const opponentPlayer = currentPlayer === 1 ? 2 : 1;
             console.log('Rakip oyuncu:', opponentPlayer, 'Mevcut oyuncu:', currentPlayer);
-            console.log('Mevcut disabledPoints dizisi:', disabledPoints);
-            console.log('disabledPoints dizisi uzunluğu:', disabledPoints.length);
             
             // Puan hesapla - SADECE RAKIP NOKTALARI PUAN VERİR
             let score = 0;
@@ -3065,13 +3053,12 @@
                 
                 // SADECE RAKIP OYUNCUNUN NOKTALARI için puan ver ve etkisiz yap
                 if (gameBoard[point.y] && gameBoard[point.y][point.x] === opponentPlayer) {
-                    // Etkisiz nokta kontrolü - HERHANGI BİR OYUNCU TARAFINDAN ETKİSİZ YAPILMIŞ NOKTA PUAN VERMEMELİ
+                    // Etkisiz nokta kontrolü - etkisiz noktalar skora katkı yapmasın
                     const isAlreadyDisabled = disabledPoints.some(dp => 
-                        dp.x === point.x && dp.y === point.y
+                        dp.x === point.x && dp.y === point.y && dp.player === opponentPlayer
                     );
                     
                     console.log(`Rakip nokta bulundu: (${point.x}, ${point.y}), zaten etkisiz mi:`, isAlreadyDisabled);
-                    console.log(`Bu nokta için disabledPoints kontrolü:`, disabledPoints.filter(dp => dp.x === point.x && dp.y === point.y));
                     
                     // SADECE ETKİSİZ OLMAYAN RAKIP NOKTALARI PUAN VERİR
                     if (!isAlreadyDisabled) {
@@ -3089,8 +3076,6 @@
                         
                         // Etkisiz noktalar listesine ekle
                         disabledPoints.push({ x: point.x, y: point.y, player: opponentPlayer });
-                        console.log(`Rakip nokta etkisiz listeye eklendi: (${point.x}, ${point.y}), player: ${opponentPlayer}`);
-                        console.log('Güncel disabledPoints dizisi:', disabledPoints);
                     } else {
                         console.log(`Rakip nokta zaten etkisiz - puan verilmedi: (${point.x}, ${point.y})`);
                     }
@@ -3098,9 +3083,9 @@
                 
                 // Çevrelenen alandaki boş noktaları da etkisiz hale getir - AMA PUAN VERMEZLİK
                 else if (gameBoard[point.y] && gameBoard[point.y][point.x] === 0) {
-                    // Boş nokta etkisiz kontrolü - HERHANGI BİR DURUMDA ETKİSİZ YAPILMIŞ BOŞ NOKTA TEKRAR İŞLENMEMELİ
+                    // Boş nokta etkisiz kontrolü
                     const isAlreadyDisabled = disabledPoints.some(dp => 
-                        dp.x === point.x && dp.y === point.y
+                        dp.x === point.x && dp.y === point.y && dp.player === 0
                     );
                     
                     if (!isAlreadyDisabled) {
@@ -3114,11 +3099,7 @@
                         
                         // Etkisiz noktalar listesine ekle (player: 0 = boş nokta)
                         disabledPoints.push({ x: point.x, y: point.y, player: 0 });
-                        console.log(`Boş nokta etkisiz listeye eklendi: (${point.x}, ${point.y}), player: 0`);
-                        console.log('Güncel disabledPoints dizisi:', disabledPoints);
-                        console.log(`Boş nokta etkisiz hale getirildi: (${point.x}, ${point.y})`);
-                    } else {
-                        console.log(`Boş nokta zaten etkisiz - tekrar işlenmedi: (${point.x}, ${point.y})`);
+                        console.log(`Boş nokta etkisiz hale getirildi - PUAN VERİLMEDİ: (${point.x}, ${point.y})`);
                     }
                 }
                 
