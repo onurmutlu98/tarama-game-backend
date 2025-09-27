@@ -2,11 +2,14 @@
   "name": "tarama-grid-game",
   "version": "1.0.0",
   "description": "Tarama Grid Oyunu - Multiplayer",
-  "main": "server.js",
+  "main": "index.html",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
     "build": "echo 'No build step required'"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -14,14 +17,12 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "keywords": [
     "game",
     "multiplayer",
     "grid",
-    "tarama"
+    "tarama",
+    "socket.io"
   ],
   "author": "Tarama Game Developer",
   "license": "MIT"

@@ -2105,22 +2105,24 @@
                 const gridPoint = document.querySelector(`[data-row="${dp.y}"][data-col="${dp.x}"]`);
                 if (gridPoint) {
                     // Kendi noktalarımızı etkisiz hale getirme kontrolü
-                    const currentPlayerIndex = currentPlayer - 1; // Frontend (1,2) -> Backend (0,1) dönüşümü
+                    const currentPlayerIndex = currentPlayer - 1; // currentPlayer (1-2) -> backend (0-1) dönüşümü
                     
                     // Sadece rakip noktaları ve boş noktaları etkisiz hale getir
                     if (dp.player !== currentPlayerIndex) {
                         gridPoint.classList.add('disabled');
                         
-                        // Boş nokta ise özel stil uygula
-                        if (dp.player === 0) {
+                        // Boş nokta ise özel stil uygula (backend'te 0 olarak saklanıyor)
+                        if (dp.player === null || dp.player === 0) {
                             gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
                             gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                             gridPoint.style.cursor = 'not-allowed';
+                            console.log(`Boş nokta etkisiz hale getirildi: (${dp.x}, ${dp.y})`);
                         }
                         // Rakip oyuncunun noktası ise opacity düşür
                         else {
                             gridPoint.style.opacity = '0.3';
                             gridPoint.style.cursor = 'not-allowed';
+                            console.log(`Rakip nokta etkisiz hale getirildi: (${dp.x}, ${dp.y}) - player: ${dp.player}`);
                         }
                     }
                     // Kendi noktalarımızı etkisiz hale getirme - log mesajı
@@ -3031,12 +3033,12 @@
             const opponentPlayer = currentPlayer === 1 ? 2 : 1;
             console.log('Rakip oyuncu:', opponentPlayer, 'Mevcut oyuncu:', currentPlayer);
             
-            // Puan hesapla - sadece rakip noktaları etkisiz hale getir, kendi noktalarını değil
+            // Puan hesapla
             let score = 0;
             enclosedPoints.forEach(point => {
                 console.log(`Nokta kontrol ediliyor: (${point.x}, ${point.y}), gameBoard değeri:`, gameBoard[point.y] ? gameBoard[point.y][point.x] : 'undefined');
                 
-                // Sadece rakip noktaları işle, kendi noktalarını etkisiz hale getirme
+                // SADECE RAKIP OYUNCUNUN NOKTALARI için puan ver ve etkisiz yap
                 if (gameBoard[point.y] && gameBoard[point.y][point.x] === opponentPlayer) {
                     // Etkisiz nokta kontrolü - etkisiz noktalar skora katkı yapmasın
                     const isAlreadyDisabled = disabledPoints.some(dp => 
@@ -3053,7 +3055,9 @@
                         const pointElement = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
                         if (pointElement) {
                             pointElement.classList.add('disabled');
-                            console.log('Nokta etkisiz hale getirildi:', pointElement);
+                            pointElement.style.opacity = '0.3';
+                            pointElement.style.cursor = 'not-allowed';
+                            console.log('Rakip nokta etkisiz hale getirildi:', pointElement);
                         }
                         
                         // Etkisiz noktalar listesine ekle
@@ -3082,11 +3086,11 @@
                     }
                 }
                 
-                // Kendi noktalarını etkisiz hale getirme - bu önemli!
-                // Eğer çevrelenen nokta kendi noktamızsa, hiçbir şey yapma
+                // KENDİ NOKTALARI ASLA ETKİSİZ HALE GETİRİLMEZ!
+                // Çevreleme yapan oyuncunun kendi noktaları çevreleme sınırı içinde kalsa bile aktif kalır
                 else if (gameBoard[point.y] && gameBoard[point.y][point.x] === currentPlayer) {
-                    console.log(`Kendi nokta bulundu: (${point.x}, ${point.y}) - etkisiz hale getirilmeyecek`);
-                    // Hiçbir şey yapma - kendi noktalarımızı etkisiz hale getirme
+                    console.log(`Kendi nokta tespit edildi: (${point.x}, ${point.y}) - ETKİSİZ YAPILMAYACAK`);
+                    // Hiçbir şey yapma - kendi noktalar aktif kalır
                 }
             });
             
@@ -3589,15 +3593,24 @@
                 }
             }
             
-            // Skorları güncelle
+            // Skorları güncelle - Backend array formatında [player0, player1] gönderiyor
             if (gameState.scores) {
-                document.getElementById('player1-score').textContent = gameState.scores.player1 || 0;
-                document.getElementById('player2-score').textContent = gameState.scores.player2 || 0;
+                player1Score = gameState.scores[0] || 0;
+                player2Score = gameState.scores[1] || 0;
+                updateScoreDisplay();
+                console.log('Skorlar updateGameFromServer\'dan güncellendi:', gameState.scores);
             }
             
             // Sırayı güncelle - Backend 0,1 kullanıyor, frontend 1,2 kullanıyor
             currentPlayer = gameState.currentPlayer + 1; // 0->1, 1->2 dönüşümü
             updateCurrentPlayerDisplay();
+            
+            // Etkisiz noktaları güncelle - Backend'ten gelen disabledPoints'i işle
+            if (gameState.disabledPoints) {
+                disabledPoints = gameState.disabledPoints;
+                console.log('updateGameFromServer: disabledPoints güncellendi, toplam:', disabledPoints.length);
+                updateDisabledPointsDisplay();
+            }
         }
 
         // Odadan çık
