@@ -3604,13 +3604,6 @@
             // Sırayı güncelle - Backend 0,1 kullanıyor, frontend 1,2 kullanıyor
             currentPlayer = gameState.currentPlayer + 1; // 0->1, 1->2 dönüşümü
             updateCurrentPlayerDisplay();
-            
-            // Etkisiz noktaları güncelle - Backend'ten gelen disabledPoints'i işle
-            if (gameState.disabledPoints) {
-                disabledPoints = gameState.disabledPoints;
-                console.log('updateGameFromServer: disabledPoints güncellendi, toplam:', disabledPoints.length);
-                updateDisabledPointsDisplay();
-            }
         }
 
         // Odadan çık
