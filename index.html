@@ -1139,11 +1139,6 @@
             transform: none;
         }
 
-        .grid-point.disabled {
-            pointer-events: none !important;
-            cursor: not-allowed !important;
-        }
-
         .grid-point.disabled.blue {
             background-color: #87ceeb; /* Açık mavi */
             border-color: #5dade2;
@@ -2114,6 +2109,7 @@
                 point.style.backgroundColor = '';
                 point.style.border = '';
                 point.style.cursor = '';
+                point.style.pointerEvents = ''; // pointer-events'i de temizle
             });
             
             // Tüm etkisiz noktaları görsel olarak güncelle
@@ -2126,18 +2122,24 @@
                     // Sadece etkisiz olarak işaretlenmiş noktaları görsel olarak etkisiz hale getir
                     gridPoint.classList.add('disabled');
                     
+                    // Backend player değerlerini frontend değerlerine dönüştür
+                    // Backend: 0,1 -> Frontend: 1,2 (0 = boş nokta)
+                    const frontendPlayerValue = dp.player === 0 ? 0 : dp.player + 1;
+                    
                     // Boş nokta ise özel stil uygula
                     if (dp.player === null || dp.player === 0) {
                         gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
                         gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                         gridPoint.style.cursor = 'not-allowed';
+                        gridPoint.style.pointerEvents = 'none'; // Tıklamayı tamamen engelle
                         console.log(`✓ Boş nokta etkisiz görüntülendi: (${dp.x}, ${dp.y})`);
                     }
                     // Oyuncu noktası ise opacity düşür
                     else {
                         gridPoint.style.opacity = '0.3';
                         gridPoint.style.cursor = 'not-allowed';
-                        console.log(`✓ Oyuncu noktası etkisiz görüntülendi: (${dp.x}, ${dp.y}) - player: ${dp.player}`);
+                        gridPoint.style.pointerEvents = 'none'; // Tıklamayı tamamen engelle
+                        console.log(`✓ Oyuncu noktası etkisiz görüntülendi: (${dp.x}, ${dp.y}) - backend player: ${dp.player}, frontend player: ${frontendPlayerValue}`);
                     }
                 }
             });
@@ -3616,6 +3618,15 @@
             // Sırayı güncelle - Backend 0,1 kullanıyor, frontend 1,2 kullanıyor
             currentPlayer = gameState.currentPlayer + 1; // 0->1, 1->2 dönüşümü
             updateCurrentPlayerDisplay();
+            
+            // Etkisiz noktaları güncelle - Backend'ten gelen disabledPoints'i işle
+            // ÖNEMLİ: gameBoard güncellemesi tamamlandıktan SONRA disabledPoints güncellenmeli
+            if (gameState.disabledPoints) {
+                disabledPoints = gameState.disabledPoints;
+                console.log('updateGameFromServer: disabledPoints güncellendi, toplam:', disabledPoints.length);
+                // gameBoard artık güncel olduğu için updateDisabledPointsDisplay doğru çalışacak
+                updateDisabledPointsDisplay();
+            }
         }
 
         // Odadan çık
