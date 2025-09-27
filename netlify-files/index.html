@@ -1464,6 +1464,7 @@
                     <div style="margin-top: 5px;">
                         <div id="blue-points-count" style="font-size: 14px; color: #1565c0; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); margin-top: 3px;">🔵 Mavi: 0</div>
                         <div id="red-points-count" style="font-size: 14px; color: #c62828; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); margin-top: 3px;">🔴 Kırmızı: 0</div>
+                        <div id="disabled-points-count" style="font-size: 14px; color: #666666; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); margin-top: 3px;">⚫ Etkisiz: 0</div>
                     </div>
                 </div>
                 
@@ -1756,12 +1757,13 @@
                             console.log(`Çevrelenen rakip nokta sayısı: ${allEnclosedOpponents.length} (yeni: ${newEnclosedCount})`);
                             console.log(`Çevrelenen boş nokta sayısı: ${allEnclosedEmptyPoints.length}`);
 
-                            // Eğer yeni rakip noktası çevrelendiyse puan ver
-                            if (allEnclosedOpponents.length > 0) {
+                            // Eğer rakip nokta VEYA boş nokta çevrelendiyse çevreleme oluştur
+                            if (allEnclosedOpponents.length > 0 || allEnclosedEmptyPoints.length > 0) {
                                 console.log(`ÇEVRELEMEBULUNDu! Oyuncu ${player} - ${size} noktalı çevreleme`);
+                                console.log(`Rakip nokta: ${allEnclosedOpponents.length}, Boş nokta: ${allEnclosedEmptyPoints.length}`);
                                 
                                 // Ses efektini sadece YENİ çevreleme yapıldığında çal
-                                if (newEnclosedCount > 0) {
+                                if (newEnclosedCount > 0 || allEnclosedEmptyPoints.length > 0) {
                                     playEnclosureSound();
                                 }
                                 
@@ -2035,9 +2037,9 @@
 
         // Etkisiz nokta kontrolü
         function isPointDisabled(x, y, player) {
-            // Boş nokta (player = 0) için de etkisiz kontrolü yap
+            // Etkisiz nokta kontrolü - koordinat ve oyuncu eşleşmesi
             return disabledPoints.some(dp => 
-                dp.x === x && dp.y === y && (dp.player === player || dp.player === 0)
+                dp.x === x && dp.y === y && dp.player === player
             );
         }
 
@@ -2185,6 +2187,7 @@
         function updateActivePointCounts() {
             let blueCount = 0;
             let redCount = 0;
+            let disabledCount = 0;
             
             // Tüm grid'i tara ve aktif noktaları say (etkisiz olanları hariç tut)
             for (let row = 0; row < 20; row++) {
@@ -2196,6 +2199,9 @@
                         } else if (gameBoard[row][col] === 2) {
                             redCount++;
                         }
+                    } else {
+                        // Etkisiz nokta sayısını artır
+                        disabledCount++;
                     }
                 }
             }
@@ -2203,6 +2209,7 @@
             // UI'yi güncelle
             const blueCountElement = document.getElementById('blue-points-count');
             const redCountElement = document.getElementById('red-points-count');
+            const disabledCountElement = document.getElementById('disabled-points-count');
             
             if (blueCountElement) {
                 blueCountElement.textContent = `🔵 Mavi: ${blueCount}`;
@@ -2210,6 +2217,10 @@
             
             if (redCountElement) {
                 redCountElement.textContent = `🔴 Kırmızı: ${redCount}`;
+            }
+            
+            if (disabledCountElement) {
+                disabledCountElement.textContent = `⚫ Etkisiz: ${disabledCount}`;
             }
         }
 
@@ -2606,7 +2617,7 @@
             document.getElementById('total-checks').textContent = '0';
             
             const totalChecksParent = document.getElementById('total-checks').parentElement;
-            totalChecksParent.innerHTML = '<strong>Toplam Kontrol Sayısı:</strong><div id="total-checks" style="font-size: 14px; color: #2c3e50; margin-top: 5px;">0</div><strong style="margin-top: 15px; display: block;">Aktif Nokta Sayıları:</strong><div style="margin-top: 5px;"><div id="blue-points-count" style="font-size: 14px; color: #1565c0; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); margin-top: 3px;">🔵 Mavi: 0</div><div id="red-points-count" style="font-size: 14px; color: #c62828; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); margin-top: 3px;">🔴 Kırmızı: 0</div></div>';
+            totalChecksParent.innerHTML = '<strong>Toplam Kontrol Sayısı:</strong><div id="total-checks" style="font-size: 14px; color: #2c3e50; margin-top: 5px;">0</div><strong style="margin-top: 15px; display: block;">Aktif Nokta Sayıları:</strong><div style="margin-top: 5px;"><div id="blue-points-count" style="font-size: 14px; color: #1565c0; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); margin-top: 3px;">🔵 Mavi: 0</div><div id="red-points-count" style="font-size: 14px; color: #c62828; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); margin-top: 3px;">🔴 Kırmızı: 0</div><div id="disabled-points-count" style="font-size: 14px; color: #666666; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); margin-top: 3px;">⚫ Etkisiz: 0</div></div>';
             
             // SVG çizgilerini tamamen temizle
             const svg = document.getElementById('enclosureSvg');
@@ -3080,6 +3091,44 @@
             console.log('Çevrelenen noktalar:', enclosedPoints);
             const opponentPlayer = currentPlayer === 1 ? 2 : 1;
             console.log('Rakip oyuncu:', opponentPlayer, 'Mevcut oyuncu:', currentPlayer);
+            
+            // Çevreleme içindeki TÜM noktaları detaylı göster
+            console.log('🎯 ÇEVRELEMENİN İÇİNDEKİ TÜM NOKTALAR:');
+            console.log(`📊 Toplam çevrelenen nokta sayısı: ${enclosedPoints.length}`);
+            console.log('📍 Nokta detayları:');
+            
+            enclosedPoints.forEach((point, index) => {
+                const boardValue = gameBoard[point.y] ? gameBoard[point.y][point.x] : 'undefined';
+                let noktaTipi = '';
+                let oyuncuBilgisi = '';
+                
+                if (boardValue === 0) {
+                    noktaTipi = '🟢 BOŞ NOKTA';
+                    oyuncuBilgisi = 'Hiçbir oyuncuya ait değil';
+                } else if (boardValue === 1) {
+                    noktaTipi = '🔵 OYUNCU 1 NOKTASI';
+                    oyuncuBilgisi = 'Mavi oyuncuya ait';
+                } else if (boardValue === 2) {
+                    noktaTipi = '🔴 OYUNCU 2 NOKTASI';
+                    oyuncuBilgisi = 'Kırmızı oyuncuya ait';
+                } else {
+                    noktaTipi = '❓ BİLİNMEYEN';
+                    oyuncuBilgisi = 'Tanımlanamayan değer';
+                }
+                
+                // Etkisiz nokta kontrolü
+                const isAlreadyDisabled = disabledPoints.some(dp => 
+                    dp.x === point.x && dp.y === point.y
+                );
+                const etkisizDurum = isAlreadyDisabled ? '❌ ETKİSİZ' : '✅ AKTİF';
+                
+                console.log(`   ${index + 1}. Nokta (${point.x}, ${point.y}): ${noktaTipi} | ${oyuncuBilgisi} | ${etkisizDurum} | gameBoard[${point.y}][${point.x}] = ${boardValue}`);
+            });
+            
+            console.log('🎮 Oyun durumu:');
+            console.log(`   Mevcut oyuncu: ${currentPlayer} (${currentPlayer === 1 ? 'Mavi' : 'Kırmızı'})`);
+            console.log(`   Rakip oyuncu: ${currentPlayer === 1 ? 2 : 1} (${currentPlayer === 1 ? 'Kırmızı' : 'Mavi'})`);
+            console.log('─'.repeat(80));
             
             // Puan hesapla
             let score = 0;
@@ -3677,6 +3726,9 @@
                 console.log('updateGameFromServer: disabledPoints güncellendi, toplam:', disabledPoints.length);
                 // gameBoard artık güncel olduğu için updateDisabledPointsDisplay doğru çalışacak
                 updateDisabledPointsDisplay();
+                
+                // ÖNEMLİ: Online oyunda updateActivePointCounts çağrısı eksikti!
+                updateActivePointCounts();
             }
         }
 
