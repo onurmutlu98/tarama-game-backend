@@ -2104,13 +2104,12 @@
         function updateDisabledPointsDisplay() {
             console.log('updateDisabledPointsDisplay çağrıldı, currentPlayer:', currentPlayer, 'disabledPoints:', disabledPoints.length);
             
-            // Önce tüm disabled class'ları temizle
+            // Önce tüm disabled class'ları ve stillerini temizle
             document.querySelectorAll('.grid-point.disabled').forEach(point => {
                 point.classList.remove('disabled');
                 point.style.opacity = '';
-                // Yeşil etkisiz noktaların rengini korumak için backgroundColor ve border'ı temizleme
-                // point.style.backgroundColor = '';
-                // point.style.border = '';
+                point.style.backgroundColor = '';
+                point.style.border = '';
                 point.style.cursor = '';
             });
             
@@ -2118,33 +2117,28 @@
             disabledPoints.forEach(dp => {
                 const gridPoint = document.querySelector(`[data-row="${dp.y}"][data-col="${dp.x}"]`);
                 if (gridPoint) {
-                    const currentPlayerIndex = currentPlayer - 1; // Frontend (1,2) -> Backend (0,1) dönüşümü
-                    
                     // ÖNEMLİ: Gerçek gameBoard durumunu kontrol et
                     const actualPlayer = gameBoard[dp.y][dp.x]; // 0=boş, 1=player1, 2=player2
                     
-                    // ÇÖZÜM: Çevreleme yapan oyuncunun kendi noktalarını ASLA etkisiz hale getirme
-                    if (actualPlayer === currentPlayer) {
-                        console.log(`⚠️ Kendi nokta tespit edildi ve ETKİSİZ YAPILMAYACAK: (${dp.x}, ${dp.y}) - currentPlayer: ${currentPlayer}`);
-                        return; // Bu noktayı etkisiz hale getirme
-                    }
+                    console.log(`🔍 Etkisiz nokta kontrol: (${dp.x}, ${dp.y}) - dp.player: ${dp.player}, actualPlayer: ${actualPlayer}, currentPlayer: ${currentPlayer}`);
                     
+                    // YENİ MANTIK: Artık TÜM etkisiz noktaları görüntüle (çevreleme noktaları hariç)
                     // Sadece etkisiz olarak işaretlenmiş noktaları görsel olarak etkisiz hale getir
                     gridPoint.classList.add('disabled');
                     
-                    // Boş nokta ise özel stil uygula (yeşil renk)
-                    if (actualPlayer === 0 || dp.player === 0) {
+                    // Boş nokta ise özel stil uygula (yeşil renk) - Backend'ten gelen dp.player === 0 kontrolü
+                    if (dp.player === 0) {
                         gridPoint.style.backgroundColor = '#90EE90'; // Daha parlak yeşil renk
                         gridPoint.style.border = '3px solid #32CD32'; // Lime green kenar çizgisi
                         gridPoint.style.cursor = 'not-allowed';
                         gridPoint.style.opacity = '0.8';
-                        console.log(`✓ Boş nokta etkisiz görüntülendi (YEŞİL): (${dp.x}, ${dp.y})`);
+                        console.log(`✅ BOŞ NOKTA ETKİSİZ GÖRÜNTÜLENDI (YEŞİL): (${dp.x}, ${dp.y}) - dp.player: ${dp.player}`);
                     }
-                    // Rakip oyuncu noktası ise opacity düşür
+                    // Diğer tüm etkisiz noktalar (rakip + kendi noktalar) için opacity düşür
                     else {
                         gridPoint.style.opacity = '0.3';
                         gridPoint.style.cursor = 'not-allowed';
-                        console.log(`✓ Rakip nokta etkisiz görüntülendi: (${dp.x}, ${dp.y}) - actualPlayer: ${actualPlayer}`);
+                        console.log(`✓ Etkisiz nokta görüntülendi: (${dp.x}, ${dp.y}) - dp.player: ${dp.player}, actualPlayer: ${actualPlayer}`);
                     }
                 }
             });
