@@ -1756,12 +1756,13 @@
                             console.log(`Çevrelenen rakip nokta sayısı: ${allEnclosedOpponents.length} (yeni: ${newEnclosedCount})`);
                             console.log(`Çevrelenen boş nokta sayısı: ${allEnclosedEmptyPoints.length}`);
 
-                            // Eğer yeni rakip noktası çevrelendiyse puan ver
-                            if (allEnclosedOpponents.length > 0) {
+                            // Eğer rakip nokta VEYA boş nokta çevrelendiyse çevreleme oluştur
+                            if (allEnclosedOpponents.length > 0 || allEnclosedEmptyPoints.length > 0) {
                                 console.log(`ÇEVRELEMEBULUNDu! Oyuncu ${player} - ${size} noktalı çevreleme`);
+                                console.log(`Rakip nokta: ${allEnclosedOpponents.length}, Boş nokta: ${allEnclosedEmptyPoints.length}`);
                                 
                                 // Ses efektini sadece YENİ çevreleme yapıldığında çal
-                                if (newEnclosedCount > 0) {
+                                if (newEnclosedCount > 0 || allEnclosedEmptyPoints.length > 0) {
                                     playEnclosureSound();
                                 }
                                 
