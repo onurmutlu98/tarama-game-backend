@@ -2126,8 +2126,12 @@
                     const myPlayerNumber = getMyPlayerNumber();
                     console.log(`updateDisabledPointsDisplay: Nokta (${dp.x}, ${dp.y}) - backend player: ${dp.player}, frontend player: ${frontendPlayer}, myPlayer: ${myPlayerNumber}`);
                     
-                    // Sadece rakip noktaları ve boş noktaları etkisiz hale getir
-                    if (dp.player === null || (dp.player !== null && frontendPlayer !== myPlayerNumber)) {
+                    // Çevreleme modunda hiçbir noktayı etkisiz hale getirme
+                    if (manualEnclosureMode) {
+                        console.log(`✓ Çevreleme modu aktif - nokta aktif bırakıldı: (${dp.x}, ${dp.y}) - backend player: ${dp.player}, frontend player: ${frontendPlayer}`);
+                    }
+                    // Normal modda sadece rakip noktaları ve boş noktaları etkisiz hale getir
+                    else if (dp.player === null || (dp.player !== null && frontendPlayer !== myPlayerNumber)) {
                         gridPoint.classList.add('disabled');
                         
                         // Boş nokta ise özel stil uygula
