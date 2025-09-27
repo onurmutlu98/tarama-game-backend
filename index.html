@@ -2111,16 +2111,18 @@
                     if (dp.player !== currentPlayerIndex) {
                         gridPoint.classList.add('disabled');
                         
-                        // Boş nokta ise özel stil uygula
-                        if (dp.player === 0) {
+                        // Boş nokta ise özel stil uygula (backend'te null olarak saklanıyor)
+                        if (dp.player === null || dp.player === 0) {
                             gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
                             gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                             gridPoint.style.cursor = 'not-allowed';
+                            console.log(`Boş nokta etkisiz hale getirildi: (${dp.x}, ${dp.y})`);
                         }
                         // Rakip oyuncunun noktası ise opacity düşür
                         else {
                             gridPoint.style.opacity = '0.3';
                             gridPoint.style.cursor = 'not-allowed';
+                            console.log(`Rakip nokta etkisiz hale getirildi: (${dp.x}, ${dp.y}) - player: ${dp.player}`);
                         }
                     }
                     // Kendi noktalarımızı etkisiz hale getirme - log mesajı
@@ -3591,15 +3593,24 @@
                 }
             }
             
-            // Skorları güncelle
+            // Skorları güncelle - Backend array formatında [player0, player1] gönderiyor
             if (gameState.scores) {
-                document.getElementById('player1-score').textContent = gameState.scores.player1 || 0;
-                document.getElementById('player2-score').textContent = gameState.scores.player2 || 0;
+                player1Score = gameState.scores[0] || 0;
+                player2Score = gameState.scores[1] || 0;
+                updateScoreDisplay();
+                console.log('Skorlar updateGameFromServer\'dan güncellendi:', gameState.scores);
             }
             
             // Sırayı güncelle - Backend 0,1 kullanıyor, frontend 1,2 kullanıyor
             currentPlayer = gameState.currentPlayer + 1; // 0->1, 1->2 dönüşümü
             updateCurrentPlayerDisplay();
+            
+            // Etkisiz noktaları güncelle - Backend'ten gelen disabledPoints'i işle
+            if (gameState.disabledPoints) {
+                disabledPoints = gameState.disabledPoints;
+                console.log('updateGameFromServer: disabledPoints güncellendi, toplam:', disabledPoints.length);
+                updateDisabledPointsDisplay();
+            }
         }
 
         // Odadan çık

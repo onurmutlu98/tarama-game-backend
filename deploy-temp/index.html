@@ -2105,13 +2105,13 @@
                 const gridPoint = document.querySelector(`[data-row="${dp.y}"][data-col="${dp.x}"]`);
                 if (gridPoint) {
                     // Kendi noktalarımızı etkisiz hale getirme kontrolü
-                    const currentPlayerIndex = currentPlayer - 1; // currentPlayer (1-2) -> backend (0-1) dönüşümü
+                    const currentPlayerIndex = currentPlayer; // currentPlayer zaten 0-1 backend değeri
                     
                     // Sadece rakip noktaları ve boş noktaları etkisiz hale getir
                     if (dp.player !== currentPlayerIndex) {
                         gridPoint.classList.add('disabled');
                         
-                        // Boş nokta ise özel stil uygula (backend'te 0 olarak saklanıyor)
+                        // Boş nokta ise özel stil uygula (backend'te null olarak saklanıyor)
                         if (dp.player === null || dp.player === 0) {
                             gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
                             gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
