@@ -2118,12 +2118,14 @@
                 if (gridPoint) {
                     const currentPlayerIndex = currentPlayer - 1; // Frontend (1,2) -> Backend (0,1) dönüşümü
                     
-                    // ÖNEMLİ: Etkisiz noktalar KALICI olmalı - currentPlayer'a bakılmaksızın
+                    // ÖNEMLİ: Gerçek gameBoard durumunu kontrol et
+                    const actualPlayer = gameBoard[dp.y][dp.x]; // 0=boş, 1=player1, 2=player2
+                    
                     // Sadece etkisiz olarak işaretlenmiş noktaları görsel olarak etkisiz hale getir
                     gridPoint.classList.add('disabled');
                     
                     // Boş nokta ise özel stil uygula
-                    if (dp.player === null || dp.player === 0) {
+                    if (actualPlayer === 0) {
                         gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
                         gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                         gridPoint.style.cursor = 'not-allowed';
@@ -2133,7 +2135,7 @@
                     else {
                         gridPoint.style.opacity = '0.3';
                         gridPoint.style.cursor = 'not-allowed';
-                        console.log(`✓ Oyuncu noktası etkisiz görüntülendi: (${dp.x}, ${dp.y}) - player: ${dp.player}`);
+                        console.log(`✓ Oyuncu noktası etkisiz görüntülendi: (${dp.x}, ${dp.y}) - actualPlayer: ${actualPlayer}`);
                     }
                 }
             });
