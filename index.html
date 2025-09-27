@@ -2076,9 +2076,11 @@
                             const gridPoint = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
                             if (gridPoint) {
                                 gridPoint.classList.add('disabled');
-                                gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
-                                gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
+                                gridPoint.style.backgroundColor = '#90EE90'; // Daha parlak yeşil renk
+                                gridPoint.style.border = '3px solid #32CD32'; // Lime green kenar çizgisi
                                 gridPoint.style.cursor = 'not-allowed';
+                                gridPoint.style.opacity = '0.8';
+                                console.log(`✓ Boş nokta etkisiz hale getirildi (YEŞİL): (${point.x}, ${point.y})`);
                             }
                         }
                     }
@@ -2130,12 +2132,13 @@
                     // Sadece etkisiz olarak işaretlenmiş noktaları görsel olarak etkisiz hale getir
                     gridPoint.classList.add('disabled');
                     
-                    // Boş nokta ise özel stil uygula
-                    if (actualPlayer === 0) {
-                        gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
-                        gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
+                    // Boş nokta ise özel stil uygula (yeşil renk)
+                    if (actualPlayer === 0 || dp.player === 0) {
+                        gridPoint.style.backgroundColor = '#90EE90'; // Daha parlak yeşil renk
+                        gridPoint.style.border = '3px solid #32CD32'; // Lime green kenar çizgisi
                         gridPoint.style.cursor = 'not-allowed';
-                        console.log(`✓ Boş nokta etkisiz görüntülendi: (${dp.x}, ${dp.y})`);
+                        gridPoint.style.opacity = '0.8';
+                        console.log(`✓ Boş nokta etkisiz görüntülendi (YEŞİL): (${dp.x}, ${dp.y})`);
                     }
                     // Rakip oyuncu noktası ise opacity düşür
                     else {
@@ -3092,9 +3095,11 @@
                         const pointElement = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
                         if (pointElement) {
                             pointElement.classList.add('disabled');
-                            pointElement.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
-                            pointElement.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
+                            pointElement.style.backgroundColor = '#90EE90'; // Daha parlak yeşil renk
+                            pointElement.style.border = '3px solid #32CD32'; // Lime green kenar çizgisi
                             pointElement.style.cursor = 'not-allowed';
+                            pointElement.style.opacity = '0.8';
+                            console.log(`✓ Local oyun: Boş nokta etkisiz hale getirildi (YEŞİL): (${point.x}, ${point.y})`);
                         }
                         
                         // Etkisiz noktalar listesine ekle (player: 0 = boş nokta)
