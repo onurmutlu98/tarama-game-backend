@@ -253,28 +253,43 @@ io.on('connection', (socket) => {
     }
 
     function isPointInPolygon(x, y, polygon) {
+        // Geliştirilmiş ray casting algoritması
         let inside = false;
-        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-            if (((polygon[i].y > y) !== (polygon[j].y > y)) &&
-                (x < (polygon[j].x - polygon[i].x) * (y - polygon[i].y) / (polygon[j].y - polygon[i].y) + polygon[i].x)) {
+        const n = polygon.length;
+        
+        for (let i = 0, j = n - 1; i < n; j = i++) {
+            const xi = polygon[i].x, yi = polygon[i].y;
+            const xj = polygon[j].x, yj = polygon[j].y;
+            
+            // Nokta kenar üzerinde mi kontrol et
+            if (xi === x && yi === y) return false; // Çevreleme noktası
+            
+            // Ray casting - yatay ışın sağa doğru
+            if (((yi > y) !== (yj > y)) && 
+                (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
                 inside = !inside;
             }
         }
+        
         return inside;
     }
 
     function getEnclosedPoints(selectedPoints, gameBoard) {
         const enclosedPoints = [];
         
+        console.log('🔍 Çevreleme tespiti başlıyor, seçilen noktalar:', selectedPoints);
+        
         // Grid üzerindeki tüm noktaları kontrol et
         for (let row = 0; row < 20; row++) {
             for (let col = 0; col < 20; col++) {
                 if (isPointInPolygon(col, row, selectedPoints)) {
                     enclosedPoints.push({x: col, y: row});
+                    console.log(`✓ Çevrelenen nokta tespit edildi: (${col}, ${row})`);
                 }
             }
         }
         
+        console.log(`📊 Toplam çevrelenen nokta sayısı: ${enclosedPoints.length}`);
         return enclosedPoints;
     }
 
