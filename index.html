@@ -2498,8 +2498,12 @@
             }
 
             // ÖNEMLİ: Etkisiz nokta kontrolü ÖNCE yapılmalı (boş noktalar da dahil)
-            if (isPointDisabled(col, row, 0) || point.classList.contains('disabled')) {
-                console.log(`Etkisiz nokta tıklandı: (${col}, ${row}) - Tıklama engellendi`);
+            // Boş noktalar için özel kontrol: hem player=0 kontrolü hem de disabled class kontrolü
+            const isDisabledEmpty = isPointDisabled(col, row, 0); // Boş nokta etkisiz kontrolü
+            const hasDisabledClass = point.classList.contains('disabled'); // CSS class kontrolü
+            
+            if (isDisabledEmpty || hasDisabledClass) {
+                console.log(`🚫 Etkisiz nokta tıklandı: (${col}, ${row}) - isDisabledEmpty: ${isDisabledEmpty}, hasDisabledClass: ${hasDisabledClass} - Tıklama engellendi`);
                 return; // Etkisiz noktaya tıklamayı engelle
             }
 
