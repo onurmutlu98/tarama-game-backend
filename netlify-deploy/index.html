@@ -1139,6 +1139,11 @@
             transform: none;
         }
 
+        .grid-point.disabled {
+            pointer-events: none !important;
+            cursor: not-allowed !important;
+        }
+
         .grid-point.disabled.blue {
             background-color: #87ceeb; /* Açık mavi */
             border-color: #5dade2;
@@ -3041,7 +3046,7 @@
             const opponentPlayer = currentPlayer === 1 ? 2 : 1;
             console.log('Rakip oyuncu:', opponentPlayer, 'Mevcut oyuncu:', currentPlayer);
             
-            // Puan hesapla
+            // Puan hesapla - SADECE RAKIP NOKTALARI PUAN VERİR
             let score = 0;
             enclosedPoints.forEach(point => {
                 console.log(`Nokta kontrol ediliyor: (${point.x}, ${point.y}), gameBoard değeri:`, gameBoard[point.y] ? gameBoard[point.y][point.x] : 'undefined');
@@ -3055,6 +3060,7 @@
                     
                     console.log(`Rakip nokta bulundu: (${point.x}, ${point.y}), zaten etkisiz mi:`, isAlreadyDisabled);
                     
+                    // SADECE ETKİSİZ OLMAYAN RAKIP NOKTALARI PUAN VERİR
                     if (!isAlreadyDisabled) {
                         score++;
                         console.log('Puan artırıldı, yeni score:', score);
@@ -3070,10 +3076,12 @@
                         
                         // Etkisiz noktalar listesine ekle
                         disabledPoints.push({ x: point.x, y: point.y, player: opponentPlayer });
+                    } else {
+                        console.log(`Rakip nokta zaten etkisiz - puan verilmedi: (${point.x}, ${point.y})`);
                     }
                 }
                 
-                // Çevrelenen alandaki boş noktaları da etkisiz hale getir
+                // Çevrelenen alandaki boş noktaları da etkisiz hale getir - AMA PUAN VERMEZLİK
                 else if (gameBoard[point.y] && gameBoard[point.y][point.x] === 0) {
                     // Boş nokta etkisiz kontrolü
                     const isAlreadyDisabled = disabledPoints.some(dp => 
@@ -3091,6 +3099,7 @@
                         
                         // Etkisiz noktalar listesine ekle (player: 0 = boş nokta)
                         disabledPoints.push({ x: point.x, y: point.y, player: 0 });
+                        console.log(`Boş nokta etkisiz hale getirildi - PUAN VERİLMEDİ: (${point.x}, ${point.y})`);
                     }
                 }
                 
@@ -3612,15 +3621,6 @@
             // Sırayı güncelle - Backend 0,1 kullanıyor, frontend 1,2 kullanıyor
             currentPlayer = gameState.currentPlayer + 1; // 0->1, 1->2 dönüşümü
             updateCurrentPlayerDisplay();
-            
-            // Etkisiz noktaları güncelle - Backend'ten gelen disabledPoints'i işle
-            // ÖNEMLİ: gameBoard güncellemesi tamamlandıktan SONRA disabledPoints güncellenmeli
-            if (gameState.disabledPoints) {
-                disabledPoints = gameState.disabledPoints;
-                console.log('updateGameFromServer: disabledPoints güncellendi, toplam:', disabledPoints.length);
-                // gameBoard artık güncel olduğu için updateDisabledPointsDisplay doğru çalışacak
-                updateDisabledPointsDisplay();
-            }
         }
 
         // Odadan çık

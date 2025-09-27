@@ -2106,49 +2106,34 @@
             document.querySelectorAll('.grid-point.disabled').forEach(point => {
                 point.classList.remove('disabled');
                 point.style.opacity = '';
-                point.style.backgroundColor = '';
-                point.style.border = '';
+                // Yeşil etkisiz noktaların rengini korumak için backgroundColor ve border'ı temizleme
+                // point.style.backgroundColor = '';
+                // point.style.border = '';
                 point.style.cursor = '';
-                point.style.pointerEvents = ''; // pointer-events'i de temizle
             });
             
             // Tüm etkisiz noktaları görsel olarak güncelle
             disabledPoints.forEach(dp => {
                 const gridPoint = document.querySelector(`[data-row="${dp.y}"][data-col="${dp.x}"]`);
                 if (gridPoint) {
-                    // Backend player değerlerini frontend player değerlerine dönüştür
-                    // Backend: 0=mavi, 1=kırmızı | Frontend: 1=mavi, 2=kırmızı
-                    let frontendPlayer = dp.player;
-                    if (dp.player !== null) {
-                        frontendPlayer = dp.player + 1; // 0->1 (mavi), 1->2 (kırmızı) dönüşümü
-                    }
+                    const currentPlayerIndex = currentPlayer - 1; // Frontend (1,2) -> Backend (0,1) dönüşümü
                     
-                    const myPlayerNumber = getMyPlayerNumber();
-                    console.log(`updateDisabledPointsDisplay: Nokta (${dp.x}, ${dp.y}) - backend player: ${dp.player}, frontend player: ${frontendPlayer}, myPlayer: ${myPlayerNumber}`);
+                    // ÖNEMLİ: Etkisiz noktalar KALICI olmalı - currentPlayer'a bakılmaksızın
+                    // Sadece etkisiz olarak işaretlenmiş noktaları görsel olarak etkisiz hale getir
+                    gridPoint.classList.add('disabled');
                     
-                    // Sadece rakip noktaları ve boş noktaları etkisiz hale getir
-                    if (dp.player === null || (dp.player !== null && frontendPlayer !== myPlayerNumber)) {
-                        gridPoint.classList.add('disabled');
-                        
-                        // Boş nokta ise özel stil uygula
-                        if (dp.player === null) {
-                            gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
-                            gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
-                            gridPoint.style.cursor = 'not-allowed';
-                            gridPoint.style.pointerEvents = 'none';
-                            console.log(`✓ Boş nokta etkisiz hale getirildi: (${dp.x}, ${dp.y})`);
-                        }
-                        // Rakip oyuncunun noktası ise opacity düşür
-                        else {
-                            gridPoint.style.opacity = '0.3';
-                            gridPoint.style.cursor = 'not-allowed';
-                            gridPoint.style.pointerEvents = 'none';
-                            console.log(`✓ Rakip nokta etkisiz hale getirildi: (${dp.x}, ${dp.y}) - backend player: ${dp.player}, frontend player: ${frontendPlayer}`);
-                        }
+                    // Boş nokta ise özel stil uygula
+                    if (dp.player === null || dp.player === 0) {
+                        gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                        gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
+                        gridPoint.style.cursor = 'not-allowed';
+                        console.log(`✓ Boş nokta etkisiz görüntülendi: (${dp.x}, ${dp.y})`);
                     }
-                    // Kendi noktalarımızı etkisiz hale getirme - log mesajı
+                    // Oyuncu noktası ise opacity düşür
                     else {
-                        console.log(`✓ Kendi nokta korundu: (${dp.x}, ${dp.y}) - backend player: ${dp.player}, frontend player: ${frontendPlayer}, myPlayer: ${myPlayerNumber}`);
+                        gridPoint.style.opacity = '0.3';
+                        gridPoint.style.cursor = 'not-allowed';
+                        console.log(`✓ Oyuncu noktası etkisiz görüntülendi: (${dp.x}, ${dp.y}) - player: ${dp.player}`);
                     }
                 }
             });
