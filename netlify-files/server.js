@@ -253,14 +253,20 @@ io.on('connection', (socket) => {
     }
 
     function isPointInPolygon(x, y, polygon) {
-        // Ray casting algoritması - basit ve etkili
+        // Geliştirilmiş ray casting algoritması
         let inside = false;
+        const n = polygon.length;
         
-        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        for (let i = 0, j = n - 1; i < n; j = i++) {
             const xi = polygon[i].x, yi = polygon[i].y;
             const xj = polygon[j].x, yj = polygon[j].y;
             
-            if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+            // Nokta kenar üzerinde mi kontrol et
+            if (xi === x && yi === y) return false; // Çevreleme noktası
+            
+            // Ray casting - yatay ışın sağa doğru
+            if (((yi > y) !== (yj > y)) && 
+                (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
                 inside = !inside;
             }
         }
@@ -279,6 +285,13 @@ io.on('connection', (socket) => {
                 if (isPointInPolygon(col, row, selectedPoints)) {
                     enclosedPoints.push({x: col, y: row});
                     console.log(`✓ Çevrelenen nokta tespit edildi: (${col}, ${row})`);
+                    
+                    // (10,8) noktası için özel log
+                    if (col === 10 && row === 8) {
+                        console.log(`🔍 ÖZEL LOG (10,8): GameBoard değeri: ${gameBoard[row] && gameBoard[row][col]}`);
+                        console.log(`🔍 ÖZEL LOG (10,8): Polygon koordinatları:`, selectedPoints);
+                        console.log(`🔍 ÖZEL LOG (10,8): isPointInPolygon sonucu: ${isPointInPolygon(col, row, selectedPoints)}`);
+                    }
                 }
             }
         }

@@ -1139,6 +1139,11 @@
             transform: none;
         }
 
+        .grid-point.disabled {
+            pointer-events: none !important;
+            cursor: not-allowed !important;
+        }
+
         .grid-point.disabled.blue {
             background-color: #87ceeb; /* Açık mavi */
             border-color: #5dade2;
@@ -2076,11 +2081,9 @@
                             const gridPoint = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
                             if (gridPoint) {
                                 gridPoint.classList.add('disabled');
-                                gridPoint.style.backgroundColor = '#90EE90'; // Daha parlak yeşil renk
-                                gridPoint.style.border = '3px solid #32CD32'; // Lime green kenar çizgisi
+                                gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                                gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                                 gridPoint.style.cursor = 'not-allowed';
-                                gridPoint.style.opacity = '0.8';
-                                console.log(`✓ Boş nokta etkisiz hale getirildi (YEŞİL): (${point.x}, ${point.y})`);
                             }
                         }
                     }
@@ -2104,12 +2107,13 @@
         function updateDisabledPointsDisplay() {
             console.log('updateDisabledPointsDisplay çağrıldı, currentPlayer:', currentPlayer, 'disabledPoints:', disabledPoints.length);
             
-            // Önce tüm disabled class'ları ve stillerini temizle
+            // Önce tüm disabled class'ları temizle
             document.querySelectorAll('.grid-point.disabled').forEach(point => {
                 point.classList.remove('disabled');
                 point.style.opacity = '';
-                point.style.backgroundColor = '';
-                point.style.border = '';
+                // Yeşil etkisiz noktaların rengini korumak için backgroundColor ve border'ı temizleme
+                // point.style.backgroundColor = '';
+                // point.style.border = '';
                 point.style.cursor = '';
             });
             
@@ -2117,27 +2121,24 @@
             disabledPoints.forEach(dp => {
                 const gridPoint = document.querySelector(`[data-row="${dp.y}"][data-col="${dp.x}"]`);
                 if (gridPoint) {
-                    // ÖNEMLİ: Gerçek gameBoard durumunu kontrol et
-                    const actualPlayer = gameBoard[dp.y][dp.x]; // 0=boş, 1=player1, 2=player2
+                    const currentPlayerIndex = currentPlayer - 1; // Frontend (1,2) -> Backend (0,1) dönüşümü
                     
-                    console.log(`🔍 Etkisiz nokta kontrol: (${dp.x}, ${dp.y}) - dp.player: ${dp.player}, actualPlayer: ${actualPlayer}, currentPlayer: ${currentPlayer}`);
-                    
-                    // YENİ MANTIK: Artık TÜM etkisiz noktaları görüntüle (çevreleme noktaları hariç)
+                    // ÖNEMLİ: Etkisiz noktalar KALICI olmalı - currentPlayer'a bakılmaksızın
                     // Sadece etkisiz olarak işaretlenmiş noktaları görsel olarak etkisiz hale getir
                     gridPoint.classList.add('disabled');
                     
-                    // Boş nokta ise özel stil uygula (yeşil renk) - Backend'ten gelen dp.player === 0 kontrolü
-                    if (dp.player === 0) {
+                    // Boş nokta ise özel stil uygula
+                    if (dp.player === null || dp.player === 0) {
                         gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
                         gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                         gridPoint.style.cursor = 'not-allowed';
                         console.log(`✓ Boş nokta etkisiz görüntülendi: (${dp.x}, ${dp.y})`);
                     }
-                    // Diğer tüm etkisiz noktalar (rakip + kendi noktalar) için opacity düşür
+                    // Oyuncu noktası ise opacity düşür
                     else {
                         gridPoint.style.opacity = '0.3';
                         gridPoint.style.cursor = 'not-allowed';
-                        console.log(`✓ Etkisiz nokta görüntülendi: (${dp.x}, ${dp.y}) - dp.player: ${dp.player}, actualPlayer: ${actualPlayer}`);
+                        console.log(`✓ Oyuncu noktası etkisiz görüntülendi: (${dp.x}, ${dp.y}) - player: ${dp.player}`);
                     }
                 }
             });
@@ -3045,7 +3046,7 @@
             const opponentPlayer = currentPlayer === 1 ? 2 : 1;
             console.log('Rakip oyuncu:', opponentPlayer, 'Mevcut oyuncu:', currentPlayer);
             
-            // Puan hesapla
+            // Puan hesapla - SADECE RAKIP NOKTALARI PUAN VERİR
             let score = 0;
             enclosedPoints.forEach(point => {
                 console.log(`Nokta kontrol ediliyor: (${point.x}, ${point.y}), gameBoard değeri:`, gameBoard[point.y] ? gameBoard[point.y][point.x] : 'undefined');
@@ -3059,6 +3060,7 @@
                     
                     console.log(`Rakip nokta bulundu: (${point.x}, ${point.y}), zaten etkisiz mi:`, isAlreadyDisabled);
                     
+                    // SADECE ETKİSİZ OLMAYAN RAKIP NOKTALARI PUAN VERİR
                     if (!isAlreadyDisabled) {
                         score++;
                         console.log('Puan artırıldı, yeni score:', score);
@@ -3074,10 +3076,12 @@
                         
                         // Etkisiz noktalar listesine ekle
                         disabledPoints.push({ x: point.x, y: point.y, player: opponentPlayer });
+                    } else {
+                        console.log(`Rakip nokta zaten etkisiz - puan verilmedi: (${point.x}, ${point.y})`);
                     }
                 }
                 
-                // Çevrelenen alandaki boş noktaları da etkisiz hale getir
+                // Çevrelenen alandaki boş noktaları da etkisiz hale getir - AMA PUAN VERMEZLİK
                 else if (gameBoard[point.y] && gameBoard[point.y][point.x] === 0) {
                     // Boş nokta etkisiz kontrolü
                     const isAlreadyDisabled = disabledPoints.some(dp => 
@@ -3091,11 +3095,11 @@
                             pointElement.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
                             pointElement.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                             pointElement.style.cursor = 'not-allowed';
-                            console.log(`✓ Local oyun: Boş nokta etkisiz hale getirildi: (${point.x}, ${point.y})`);
                         }
                         
                         // Etkisiz noktalar listesine ekle (player: 0 = boş nokta)
                         disabledPoints.push({ x: point.x, y: point.y, player: 0 });
+                        console.log(`Boş nokta etkisiz hale getirildi - PUAN VERİLMEDİ: (${point.x}, ${point.y})`);
                     }
                 }
                 
@@ -3334,11 +3338,6 @@
                 if (data.success) {
                     // Çevreleme başarılı
                     console.log('Çevreleme başarılı, gameState güncelleniyor');
-                    
-                    // ÖNEMLİ: Seçilen çevreleme noktalarını kaydet (bu noktalar frontend'te de korunacak)
-                    const selectedPointsSet = new Set(selectedPointsForEnclosure.map(p => `${p.x},${p.y}`));
-                    console.log(`🔒 Frontend: Seçilen çevreleme noktaları korunacak:`, selectedPointsForEnclosure);
-                    
                     updateGameFromServer(data.gameState);
                     
                     // Puan güncelleme
@@ -3356,21 +3355,10 @@
                         playEnclosureSound();
                     }
                     
-                    // Etkisiz noktaları güncelle - seçilen çevreleme noktalarını hariç tut
+                    // Etkisiz noktaları güncelle - sadece rakip ve boş noktaları görsel olarak etkisiz hale getir
                     if (data.gameState.disabledPoints) {
-                        // Seçilen çevreleme noktalarını disabledPoints'ten çıkar
-                        const filteredDisabledPoints = data.gameState.disabledPoints.filter(dp => {
-                            const pointKey = `${dp.x},${dp.y}`;
-                            const isSelectedPoint = selectedPointsSet.has(pointKey);
-                            if (isSelectedPoint) {
-                                console.log(`🛡️ Frontend: SEÇİLEN NOKTA KORUNDU: (${dp.x}, ${dp.y}) - çevreleme noktası olduğu için etkisiz hale getirilmedi`);
-                            }
-                            return !isSelectedPoint;
-                        });
-                        
-                        disabledPoints = filteredDisabledPoints;
+                        disabledPoints = data.gameState.disabledPoints;
                         console.log('Online çevreleme: disabledPoints güncelleniyor, currentPlayer:', currentPlayer);
-                        console.log('Korunan nokta sayısı:', data.gameState.disabledPoints.length - filteredDisabledPoints.length);
                         updateDisabledPointsDisplay();
                     }
                     
@@ -3633,15 +3621,6 @@
             // Sırayı güncelle - Backend 0,1 kullanıyor, frontend 1,2 kullanıyor
             currentPlayer = gameState.currentPlayer + 1; // 0->1, 1->2 dönüşümü
             updateCurrentPlayerDisplay();
-            
-            // Etkisiz noktaları güncelle - Backend'ten gelen disabledPoints'i işle
-            // ÖNEMLİ: gameBoard güncellemesi tamamlandıktan SONRA disabledPoints güncellenmeli
-            if (gameState.disabledPoints) {
-                disabledPoints = gameState.disabledPoints;
-                console.log('updateGameFromServer: disabledPoints güncellendi, toplam:', disabledPoints.length);
-                // gameBoard artık güncel olduğu için updateDisabledPointsDisplay doğru çalışacak
-                updateDisabledPointsDisplay();
-            }
         }
 
         // Odadan çık

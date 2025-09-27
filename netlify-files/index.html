@@ -2128,11 +2128,10 @@
                     
                     // Boş nokta ise özel stil uygula (yeşil renk) - Backend'ten gelen dp.player === 0 kontrolü
                     if (dp.player === 0) {
-                        gridPoint.style.backgroundColor = '#90EE90'; // Daha parlak yeşil renk
-                        gridPoint.style.border = '3px solid #32CD32'; // Lime green kenar çizgisi
+                        gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                        gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                         gridPoint.style.cursor = 'not-allowed';
-                        gridPoint.style.opacity = '0.8';
-                        console.log(`✅ BOŞ NOKTA ETKİSİZ GÖRÜNTÜLENDI (YEŞİL): (${dp.x}, ${dp.y}) - dp.player: ${dp.player}`);
+                        console.log(`✓ Boş nokta etkisiz görüntülendi: (${dp.x}, ${dp.y})`);
                     }
                     // Diğer tüm etkisiz noktalar (rakip + kendi noktalar) için opacity düşür
                     else {
@@ -3089,11 +3088,10 @@
                         const pointElement = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
                         if (pointElement) {
                             pointElement.classList.add('disabled');
-                            pointElement.style.backgroundColor = '#90EE90'; // Daha parlak yeşil renk
-                            pointElement.style.border = '3px solid #32CD32'; // Lime green kenar çizgisi
+                            pointElement.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                            pointElement.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                             pointElement.style.cursor = 'not-allowed';
-                            pointElement.style.opacity = '0.8';
-                            console.log(`✓ Local oyun: Boş nokta etkisiz hale getirildi (YEŞİL): (${point.x}, ${point.y})`);
+                            console.log(`✓ Local oyun: Boş nokta etkisiz hale getirildi: (${point.x}, ${point.y})`);
                         }
                         
                         // Etkisiz noktalar listesine ekle (player: 0 = boş nokta)
