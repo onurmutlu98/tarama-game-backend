@@ -276,7 +276,7 @@ io.on('connection', (socket) => {
         return enclosedPoints;
     }
 
-    function validateEnclosure(selectedPoints, gameBoard, currentPlayer) {
+    function validateEnclosure(selectedPoints, gameBoard, currentPlayer, disabledPoints = []) {
         console.log('Çevreleme validasyonu başlıyor...');
         
         // 1. Minimum nokta sayısı kontrolü
@@ -306,17 +306,27 @@ io.on('connection', (socket) => {
         
         for (const point of enclosedPoints) {
             if (gameBoard[point.y] && gameBoard[point.y][point.x] === opponentPlayer) {
-                hasOpponentPoints = true;
-                enclosedOpponentCount++;
+                // Nokta daha önce etkisiz hale getirilmiş mi kontrol et
+                const isDisabled = disabledPoints.some(dp =>
+                    dp.x === point.x && dp.y === point.y && dp.player === opponentPlayer
+                );
+                
+                if (!isDisabled) {
+                    hasOpponentPoints = true;
+                    enclosedOpponentCount++;
+                    console.log(`Aktif rakip nokta bulundu: (${point.x}, ${point.y})`);
+                } else {
+                    console.log(`Etkisiz rakip nokta atlandı: (${point.x}, ${point.y})`);
+                }
             }
         }
         
         if (!hasOpponentPoints) {
-            console.log('Çevrelenen alanda rakip nokta yok');
-            return { valid: false, message: 'Çevreleme geçerli olması için rakip noktaları içermelidir!' };
+            console.log('Çevrelenen alanda aktif rakip nokta yok');
+            return { valid: false, message: 'Çevreleme geçerli olması için aktif rakip noktaları içermelidir!' };
         }
         
-        console.log('Çevreleme geçerli! Çevrelenen rakip nokta sayısı:', enclosedOpponentCount);
+        console.log('Çevreleme geçerli! Çevrelenen aktif rakip nokta sayısı:', enclosedOpponentCount);
         return { 
             valid: true, 
             enclosedPoints: enclosedPoints,
@@ -351,7 +361,7 @@ io.on('connection', (socket) => {
         }
 
         // Tam çevreleme doğrulaması
-        const validation = validateEnclosure(data.selectedPoints, room.gameState.board, playerIndex);
+        const validation = validateEnclosure(data.selectedPoints, room.gameState.board, playerIndex, room.gameState.disabledPoints || []);
         
         if (!validation.valid) {
             console.log('Çevreleme geçersiz:', validation.message);
