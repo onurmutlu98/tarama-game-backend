@@ -253,14 +253,20 @@ io.on('connection', (socket) => {
     }
 
     function isPointInPolygon(x, y, polygon) {
-        // Ray casting algoritması - basit ve etkili
+        // Geliştirilmiş ray casting algoritması
         let inside = false;
+        const n = polygon.length;
         
-        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        for (let i = 0, j = n - 1; i < n; j = i++) {
             const xi = polygon[i].x, yi = polygon[i].y;
             const xj = polygon[j].x, yj = polygon[j].y;
             
-            if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+            // Nokta kenar üzerinde mi kontrol et
+            if (xi === x && yi === y) return false; // Çevreleme noktası
+            
+            // Ray casting - yatay ışın sağa doğru
+            if (((yi > y) !== (yj > y)) && 
+                (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
                 inside = !inside;
             }
         }
