@@ -2121,6 +2121,12 @@
                     // ÖNEMLİ: Gerçek gameBoard durumunu kontrol et
                     const actualPlayer = gameBoard[dp.y][dp.x]; // 0=boş, 1=player1, 2=player2
                     
+                    // ÇÖZÜM: Çevreleme yapan oyuncunun kendi noktalarını ASLA etkisiz hale getirme
+                    if (actualPlayer === currentPlayer) {
+                        console.log(`⚠️ Kendi nokta tespit edildi ve ETKİSİZ YAPILMAYACAK: (${dp.x}, ${dp.y}) - currentPlayer: ${currentPlayer}`);
+                        return; // Bu noktayı etkisiz hale getirme
+                    }
+                    
                     // Sadece etkisiz olarak işaretlenmiş noktaları görsel olarak etkisiz hale getir
                     gridPoint.classList.add('disabled');
                     
@@ -2131,11 +2137,11 @@
                         gridPoint.style.cursor = 'not-allowed';
                         console.log(`✓ Boş nokta etkisiz görüntülendi: (${dp.x}, ${dp.y})`);
                     }
-                    // Oyuncu noktası ise opacity düşür
+                    // Rakip oyuncu noktası ise opacity düşür
                     else {
                         gridPoint.style.opacity = '0.3';
                         gridPoint.style.cursor = 'not-allowed';
-                        console.log(`✓ Oyuncu noktası etkisiz görüntülendi: (${dp.x}, ${dp.y}) - actualPlayer: ${actualPlayer}`);
+                        console.log(`✓ Rakip nokta etkisiz görüntülendi: (${dp.x}, ${dp.y}) - actualPlayer: ${actualPlayer}`);
                     }
                 }
             });

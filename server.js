@@ -393,6 +393,7 @@ io.on('connection', (socket) => {
                         y: point.y,
                         player: opponentPlayer
                     });
+                    console.log(`✓ Rakip nokta etkisiz hale getirildi: (${point.x}, ${point.y}) - player: ${opponentPlayer}`);
                 }
             }
             // Çevrelenen alandaki boş noktaları da etkisiz hale getir (local oyundaki gibi)
@@ -408,7 +409,13 @@ io.on('connection', (socket) => {
                         y: point.y,
                         player: 0 // 0 = boş nokta etkisiz
                     });
+                    console.log(`✓ Boş nokta etkisiz hale getirildi: (${point.x}, ${point.y})`);
                 }
+            }
+            // ÖNEMLİ: Çevreleme yapan oyuncunun kendi noktalarını ASLA etkisiz hale getirme
+            else if (room.gameState.board[point.y] && room.gameState.board[point.y][point.x] === playerIndex) {
+                console.log(`⚠️ Kendi nokta tespit edildi ve ETKİSİZ YAPILMAYACAK: (${point.x}, ${point.y}) - playerIndex: ${playerIndex}`);
+                // Hiçbir şey yapma - kendi noktalar aktif kalır
             }
         }
         
