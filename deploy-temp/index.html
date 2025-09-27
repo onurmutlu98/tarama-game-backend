@@ -2105,7 +2105,7 @@
                 const gridPoint = document.querySelector(`[data-row="${dp.y}"][data-col="${dp.x}"]`);
                 if (gridPoint) {
                     // Kendi noktalarımızı etkisiz hale getirme kontrolü
-                    const currentPlayerIndex = currentPlayer; // currentPlayer zaten 0-1 backend değeri
+                    const currentPlayerIndex = currentPlayer - 1; // Frontend (1,2) -> Backend (0,1) dönüşümü
                     
                     // Sadece rakip noktaları ve boş noktaları etkisiz hale getir
                     if (dp.player !== currentPlayerIndex) {
