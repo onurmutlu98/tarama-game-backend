@@ -1740,7 +1740,21 @@
                                 }
                             }
 
+                            // Çevrelenen boş noktaları da kontrol et ve say
+                            const allEnclosedEmptyPoints = [];
+                            for (let y = 0; y < GRID_SIZE; y++) {
+                                for (let x = 0; x < GRID_SIZE; x++) {
+                                    // Sadece boş noktaları kontrol et (gameBoard[y][x] === 0)
+                                    if (gameBoard[y] && gameBoard[y][x] === 0) {
+                                        if (isPointInPolygon(x, y, sortedCombo)) {
+                                            allEnclosedEmptyPoints.push({x: x, y: y, player: 0});
+                                        }
+                                    }
+                                }
+                            }
+
                             console.log(`Çevrelenen rakip nokta sayısı: ${allEnclosedOpponents.length} (yeni: ${newEnclosedCount})`);
+                            console.log(`Çevrelenen boş nokta sayısı: ${allEnclosedEmptyPoints.length}`);
 
                             // Eğer yeni rakip noktası çevrelendiyse puan ver
                             if (allEnclosedOpponents.length > 0) {
@@ -1764,7 +1778,8 @@
                                     enclosedCount: newEnclosedCount,
                                     totalEnclosedCount: allEnclosedOpponents.length,
                                     newEnclosedOpponents: newEnclosedOpponents,
-                                    allEnclosedOpponents: allEnclosedOpponents
+                                    allEnclosedOpponents: allEnclosedOpponents,
+                                    allEnclosedEmptyPoints: allEnclosedEmptyPoints
                                 });
                                 console.log(`Çevreleme eklendi! Toplam bulunan çevreleme: ${foundEnclosures.length}`);
                             }
@@ -2037,7 +2052,8 @@
                 console.log('Online oyun çevreleme işlemi:', {
                     enclosedPoints: enclosedPoints,
                     opponentPlayer: opponentPlayer,
-                    currentPlayer: currentPlayer
+                    currentPlayer: currentPlayer,
+                    allEnclosedEmptyPoints: enclosure.allEnclosedEmptyPoints || []
                 });
 
                 // Çevreleme içindeki TÜM noktaları kontrol et
@@ -2069,37 +2085,42 @@
                             }
                         }
                     }
-                    // Çevrelenen alandaki boş noktaları da etkisiz hale getir
-                    else if (pointValue === 0) {
-                        // Bu boş nokta zaten etkisiz mi kontrol et
-                        const alreadyDisabled = disabledPoints.some(dp =>
-                            dp.x === point.x && dp.y === point.y && dp.player === 0
-                        );
-
-                        if (!alreadyDisabled) {
-                            disabledPoints.push({
-                                x: point.x,
-                                y: point.y,
-                                player: 0 // 0 = boş nokta etkisiz
-                            });
-
-                            // Grid üzerindeki boş noktayı görsel olarak etkisiz yap
-                            const gridPoint = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
-                            if (gridPoint) {
-                                gridPoint.classList.add('disabled');
-                                gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
-                                gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
-                                gridPoint.style.cursor = 'not-allowed';
-                                console.log(`✓ Online oyun: Boş nokta etkisiz hale getirildi: (${point.x}, ${point.y})`);
-                            }
-                        }
-                    }
                     // KENDİ NOKTALARI ASLA ETKİSİZ HALE GETİRİLMEZ!
                     else if (pointValue === currentPlayer) {
                         console.log(`Online oyun: Kendi nokta tespit edildi: (${point.x}, ${point.y}) - ETKİSİZ YAPILMAYACAK`);
                         // Hiçbir şey yapma - kendi noktalar aktif kalır
                     }
                 });
+
+                // checkEnclosures'dan gelen boş noktaları işle
+                if (enclosure.allEnclosedEmptyPoints && enclosure.allEnclosedEmptyPoints.length > 0) {
+                    console.log(`Online oyun: ${enclosure.allEnclosedEmptyPoints.length} boş nokta tespit edildi`);
+                    
+                    enclosure.allEnclosedEmptyPoints.forEach(emptyPoint => {
+                        // Bu boş nokta zaten etkisiz mi kontrol et
+                        const alreadyDisabled = disabledPoints.some(dp =>
+                            dp.x === emptyPoint.x && dp.y === emptyPoint.y && dp.player === 0
+                        );
+
+                        if (!alreadyDisabled) {
+                            disabledPoints.push({
+                                x: emptyPoint.x,
+                                y: emptyPoint.y,
+                                player: 0 // 0 = boş nokta etkisiz
+                            });
+
+                            // Grid üzerindeki boş noktayı görsel olarak etkisiz yap
+                            const gridPoint = document.querySelector(`[data-row="${emptyPoint.y}"][data-col="${emptyPoint.x}"]`);
+                            if (gridPoint) {
+                                gridPoint.classList.add('disabled');
+                                gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                                gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
+                                gridPoint.style.cursor = 'not-allowed';
+                                console.log(`✓ Online oyun: Boş nokta etkisiz hale getirildi: (${emptyPoint.x}, ${emptyPoint.y})`);
+                            }
+                        }
+                    });
+                }
             });
 
             // Görsel güncelleme
