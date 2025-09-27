@@ -2119,19 +2119,19 @@
                     // Backend player değerlerini frontend player değerlerine dönüştür
                     // Backend: 0=mavi, 1=kırmızı | Frontend: 1=mavi, 2=kırmızı
                     let frontendPlayer = dp.player;
-                    if (dp.player !== null && dp.player !== 0) {
-                        frontendPlayer = dp.player + 1; // 0->1, 1->2 dönüşümü
+                    if (dp.player !== null) {
+                        frontendPlayer = dp.player + 1; // 0->1 (mavi), 1->2 (kırmızı) dönüşümü
                     }
                     
                     const myPlayerNumber = getMyPlayerNumber();
                     console.log(`updateDisabledPointsDisplay: Nokta (${dp.x}, ${dp.y}) - backend player: ${dp.player}, frontend player: ${frontendPlayer}, myPlayer: ${myPlayerNumber}`);
                     
                     // Sadece rakip noktaları ve boş noktaları etkisiz hale getir
-                    if (dp.player === 0 || frontendPlayer !== myPlayerNumber) {
+                    if (dp.player === null || (dp.player !== null && frontendPlayer !== myPlayerNumber)) {
                         gridPoint.classList.add('disabled');
                         
-                        // Boş nokta ise özel stil uygula (backend'te 0 olarak saklanıyor)
-                        if (dp.player === null || dp.player === 0) {
+                        // Boş nokta ise özel stil uygula
+                        if (dp.player === null) {
                             gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
                             gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                             gridPoint.style.cursor = 'not-allowed';
