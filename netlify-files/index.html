@@ -2026,18 +2026,26 @@
             );
         }
 
-        // Etkisiz noktaları güncelle
+        // Etkisiz noktaları güncelle - LOCAL OYUN SİSTEMİ İLE UYUMLU
         function updateDisabledPoints(enclosures) {
             enclosures.forEach(enclosure => {
                 // Çevreleme içindeki tüm noktaları bul
                 const enclosedPoints = getEnclosedPoints(enclosure.points);
                 const opponentPlayer = enclosure.player === 1 ? 2 : 1;
+                const currentPlayer = enclosure.player;
 
-                // Çevreleme içindeki TÜM noktaları etkisiz yap (rakip noktalar + boş noktalar)
+                console.log('Online oyun çevreleme işlemi:', {
+                    enclosedPoints: enclosedPoints,
+                    opponentPlayer: opponentPlayer,
+                    currentPlayer: currentPlayer
+                });
+
+                // Çevreleme içindeki TÜM noktaları kontrol et
                 enclosedPoints.forEach(point => {
-                    const pointValue = gameBoard[point.y][point.x];
+                    const pointValue = gameBoard[point.y] ? gameBoard[point.y][point.x] : undefined;
+                    console.log(`Online oyun nokta kontrol: (${point.x}, ${point.y}), değer:`, pointValue);
                     
-                    // Rakip oyuncunun noktası ise etkisiz yap
+                    // SADECE RAKIP OYUNCUNUN NOKTALARI için etkisiz yap
                     if (pointValue === opponentPlayer) {
                         // Bu nokta zaten etkisiz mi kontrol et
                         const alreadyDisabled = disabledPoints.some(dp =>
@@ -2055,10 +2063,13 @@
                             const gridPoint = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
                             if (gridPoint) {
                                 gridPoint.classList.add('disabled');
+                                gridPoint.style.opacity = '0.3';
+                                gridPoint.style.cursor = 'not-allowed';
+                                console.log(`✓ Online oyun: Rakip nokta etkisiz yapıldı: (${point.x}, ${point.y})`);
                             }
                         }
                     }
-                    // BOŞ NOKTA ise de etkisiz yap (kimse koyamasın)
+                    // Çevrelenen alandaki boş noktaları da etkisiz hale getir
                     else if (pointValue === 0) {
                         // Bu boş nokta zaten etkisiz mi kontrol et
                         const alreadyDisabled = disabledPoints.some(dp =>
@@ -2076,13 +2087,17 @@
                             const gridPoint = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
                             if (gridPoint) {
                                 gridPoint.classList.add('disabled');
-                                gridPoint.style.backgroundColor = '#90EE90'; // Daha parlak yeşil renk
-                                gridPoint.style.border = '3px solid #32CD32'; // Lime green kenar çizgisi
+                                gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                                gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                                 gridPoint.style.cursor = 'not-allowed';
-                                gridPoint.style.opacity = '0.8';
-                                console.log(`✓ Boş nokta etkisiz hale getirildi (YEŞİL): (${point.x}, ${point.y})`);
+                                console.log(`✓ Online oyun: Boş nokta etkisiz hale getirildi: (${point.x}, ${point.y})`);
                             }
                         }
+                    }
+                    // KENDİ NOKTALARI ASLA ETKİSİZ HALE GETİRİLMEZ!
+                    else if (pointValue === currentPlayer) {
+                        console.log(`Online oyun: Kendi nokta tespit edildi: (${point.x}, ${point.y}) - ETKİSİZ YAPILMAYACAK`);
+                        // Hiçbir şey yapma - kendi noktalar aktif kalır
                     }
                 });
             });

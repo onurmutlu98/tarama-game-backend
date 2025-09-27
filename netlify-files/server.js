@@ -407,7 +407,7 @@ io.on('connection', (socket) => {
         const selectedPointsSet = new Set(data.selectedPoints.map(p => `${p.x},${p.y}`));
         console.log(`🔒 Seçilen çevreleme noktaları korunacak:`, data.selectedPoints);
         
-        // YENİ MANTIK: Alan içindeki TÜM noktaları etkisiz hale getir
+        // YENİ MANTIK: Alan içindeki TÜM noktaları etkisiz hale getir - LOCAL OYUN SİSTEMİ İLE UYUMLU
         for (const point of validation.enclosedPoints) {
             // Seçilen çevreleme noktalarını kontrol et - bunlar ASLA etkisiz hale getirilmez
             const pointKey = `${point.x},${point.y}`;
@@ -431,10 +431,10 @@ io.on('connection', (socket) => {
                         y: point.y,
                         player: opponentPlayer
                     });
-                    console.log(`✓ Rakip nokta etkisiz hale getirildi: (${point.x}, ${point.y}) - player: ${opponentPlayer}`);
+                    console.log(`✓ Server: Rakip nokta etkisiz hale getirildi: (${point.x}, ${point.y}) - player: ${opponentPlayer}`);
                 }
             }
-            // BOŞ NOKTALAR - Sadece etkisiz yap (puan verme)
+            // BOŞ NOKTALAR - Sadece etkisiz yap (puan verme) - LOCAL OYUN SİSTEMİ İLE UYUMLU
             else if (pointValue === 0) {
                 // Boş nokta zaten etkisiz mi kontrol et
                 const alreadyDisabled = room.gameState.disabledPoints.some(dp =>
@@ -447,24 +447,13 @@ io.on('connection', (socket) => {
                         y: point.y,
                         player: 0 // 0 = boş nokta etkisiz
                     });
-                    console.log(`✓ Boş nokta etkisiz hale getirildi: (${point.x}, ${point.y})`);
+                    console.log(`✓ Server: Boş nokta etkisiz hale getirildi: (${point.x}, ${point.y})`);
                 }
             }
-            // KENDİ OYUNCUNUN NOKTALARI - Sadece etkisiz yap (puan verme, çevreleme noktaları hariç)
+            // MEVCUT OYUNCUNUN NOKTALARI - ASLA ETKİSİZ HALE GETİRİLMEZ!
             else if (pointValue === playerIndex) {
-                // Kendi nokta zaten etkisiz mi kontrol et
-                const alreadyDisabled = room.gameState.disabledPoints.some(dp =>
-                    dp.x === point.x && dp.y === point.y && dp.player === playerIndex
-                );
-                
-                if (!alreadyDisabled) {
-                    room.gameState.disabledPoints.push({
-                        x: point.x,
-                        y: point.y,
-                        player: playerIndex
-                    });
-                    console.log(`✓ Kendi nokta etkisiz hale getirildi: (${point.x}, ${point.y}) - player: ${playerIndex}`);
-                }
+                console.log(`🛡️ Server: Kendi nokta tespit edildi: (${point.x}, ${point.y}) - ETKİSİZ YAPILMAYACAK`);
+                // Hiçbir şey yapma - kendi noktalar aktif kalır
             }
         }
         
