@@ -380,7 +380,19 @@ io.on('connection', (socket) => {
         }
         
         const opponentPlayer = 1 - playerIndex;
+        
+        // ÖNEMLİ: Seçilen çevreleme noktalarını kaydet (bu noktalar ASLA etkisiz hale getirilmeyecek)
+        const selectedPointsSet = new Set(data.selectedPoints.map(p => `${p.x},${p.y}`));
+        console.log(`🔒 Seçilen çevreleme noktaları korunacak:`, data.selectedPoints);
+        
         for (const point of validation.enclosedPoints) {
+            // Seçilen çevreleme noktalarını kontrol et - bunlar ASLA etkisiz hale getirilmez
+            const pointKey = `${point.x},${point.y}`;
+            if (selectedPointsSet.has(pointKey)) {
+                console.log(`🛡️ SEÇİLEN NOKTA KORUNDU: (${point.x}, ${point.y}) - çevreleme noktası olduğu için etkisiz hale getirilmedi`);
+                continue; // Bu noktayı atla, etkisiz hale getirme
+            }
+            
             if (room.gameState.board[point.y] && room.gameState.board[point.y][point.x] === opponentPlayer) {
                 // Rakip nokta zaten etkisiz mi kontrol et
                 const alreadyDisabled = room.gameState.disabledPoints.some(dp =>

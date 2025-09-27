@@ -3337,6 +3337,11 @@
                 if (data.success) {
                     // Çevreleme başarılı
                     console.log('Çevreleme başarılı, gameState güncelleniyor');
+                    
+                    // ÖNEMLİ: Seçilen çevreleme noktalarını kaydet (bu noktalar frontend'te de korunacak)
+                    const selectedPointsSet = new Set(selectedPointsForEnclosure.map(p => `${p.x},${p.y}`));
+                    console.log(`🔒 Frontend: Seçilen çevreleme noktaları korunacak:`, selectedPointsForEnclosure);
+                    
                     updateGameFromServer(data.gameState);
                     
                     // Puan güncelleme
@@ -3354,10 +3359,21 @@
                         playEnclosureSound();
                     }
                     
-                    // Etkisiz noktaları güncelle - sadece rakip ve boş noktaları görsel olarak etkisiz hale getir
+                    // Etkisiz noktaları güncelle - seçilen çevreleme noktalarını hariç tut
                     if (data.gameState.disabledPoints) {
-                        disabledPoints = data.gameState.disabledPoints;
+                        // Seçilen çevreleme noktalarını disabledPoints'ten çıkar
+                        const filteredDisabledPoints = data.gameState.disabledPoints.filter(dp => {
+                            const pointKey = `${dp.x},${dp.y}`;
+                            const isSelectedPoint = selectedPointsSet.has(pointKey);
+                            if (isSelectedPoint) {
+                                console.log(`🛡️ Frontend: SEÇİLEN NOKTA KORUNDU: (${dp.x}, ${dp.y}) - çevreleme noktası olduğu için etkisiz hale getirilmedi`);
+                            }
+                            return !isSelectedPoint;
+                        });
+                        
+                        disabledPoints = filteredDisabledPoints;
                         console.log('Online çevreleme: disabledPoints güncelleniyor, currentPlayer:', currentPlayer);
+                        console.log('Korunan nokta sayısı:', data.gameState.disabledPoints.length - filteredDisabledPoints.length);
                         updateDisabledPointsDisplay();
                     }
                     
