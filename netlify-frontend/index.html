@@ -2089,6 +2089,31 @@
                             }
                         }
                     }
+                    // BOŞ NOKTALARI da etkisiz hale getir
+                    else if (pointValue === null || pointValue === undefined || pointValue === 0) {
+                        // Boş nokta etkisiz kontrolü
+                        const alreadyDisabled = disabledPoints.some(dp =>
+                            dp.x === point.x && dp.y === point.y && dp.player === 0
+                        );
+
+                        if (!alreadyDisabled) {
+                            disabledPoints.push({
+                                x: point.x,
+                                y: point.y,
+                                player: 0 // 0 = boş nokta etkisiz
+                            });
+
+                            // Grid üzerindeki boş noktayı görsel olarak etkisiz yap
+                            const gridPoint = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
+                            if (gridPoint) {
+                                gridPoint.classList.add('disabled');
+                                gridPoint.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
+                                gridPoint.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
+                                gridPoint.style.cursor = 'not-allowed';
+                                console.log(`✓ Online oyun: Boş nokta etkisiz hale getirildi: (${point.x}, ${point.y})`);
+                            }
+                        }
+                    }
                     // KENDİ NOKTALARI ASLA ETKİSİZ HALE GETİRİLMEZ!
                     else if (pointValue === currentPlayer) {
                         console.log(`Online oyun: Kendi nokta tespit edildi: (${point.x}, ${point.y}) - ETKİSİZ YAPILMAYACAK`);

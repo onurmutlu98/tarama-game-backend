@@ -460,7 +460,7 @@ io.on('connection', (socket) => {
                 }
             }
             // BOŞ NOKTALAR - Sadece etkisiz yap (puan verme)
-            else if (pointValue === 0) {
+            else if (pointValue === null || pointValue === undefined) {
                 // Boş nokta zaten etkisiz mi kontrol et
                 const alreadyDisabled = room.gameState.disabledPoints.some(dp =>
                     dp.x === point.x && dp.y === point.y && dp.player === 0
