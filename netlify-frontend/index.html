@@ -2458,6 +2458,13 @@
                     console.error('Socket bağlantısı yok!');
                     return;
                 }
+                
+                // ÖNEMLİ: Etkisiz nokta kontrolü ÖNCE yapılmalı (boş noktalar da dahil)
+                if (isPointDisabled(col, row, 0) || point.classList.contains('disabled')) {
+                    console.log(`Etkisiz nokta tıklandı: (${col}, ${row}) - Tıklama engellendi`);
+                    return; // Etkisiz noktaya tıklamayı engelle
+                }
+                
                 // Eğer nokta zaten doldurulmuşsa, tıklamayı ignore et
                 if (point.classList.contains('filled')) {
                     return;

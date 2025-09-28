@@ -159,6 +159,13 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Etkisiz nokta kontrolü fonksiyonu
+    function isPointDisabled(room, col, row, player) {
+        return room.gameState.disabledPoints.some(dp => 
+            dp.x === col && dp.y === row && dp.player === player
+        );
+    }
+
     // Oyun hamlesi
     socket.on("makeMove", ({ roomCode, row, col, playerIndex }) => {
         if (!rooms[roomCode] || !rooms[roomCode].gameState.gameStarted) {
@@ -176,6 +183,13 @@ io.on('connection', (socket) => {
         
         if (actualPlayerIndex !== room.gameState.currentPlayer) {
             socket.emit("error", "Sıra sizde değil!");
+            return;
+        }
+
+        // ÖNEMLİ: Etkisiz nokta kontrolü (boş noktalar da dahil)
+        if (isPointDisabled(room, col, row, 0) || isPointDisabled(room, col, row, actualPlayerIndex) || isPointDisabled(room, col, row, 1 - actualPlayerIndex)) {
+            socket.emit("error", "Bu nokta etkisiz durumda!");
+            console.log(`Etkisiz nokta tıklandı: (${col}, ${row}) - Hamle engellendi`);
             return;
         }
 
