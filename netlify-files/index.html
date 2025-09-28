@@ -3668,8 +3668,10 @@
             restartGame();
         }
 
-        // Sunucudan oyun durumunu güncelle
+        // Sunucudan oyun durumunu güncelle - BOŞ NOKTALAR İÇİN DÜZELTME
         function updateGameFromServer(gameState) {
+            console.log('updateGameFromServer çağrıldı, gameState:', gameState);
+            
             // Board'u güncelle
             for (let row = 0; row < 20; row++) {
                 for (let col = 0; col < 20; col++) {
@@ -3681,21 +3683,14 @@
                         gameBoard[row][col] = playerIndex + 1;
                         
                         // Eski sınıfları temizle
-                        cell.classList.remove('player1', 'player2', 'blue', 'red');
+                        cell.classList.remove('player1', 'player2', 'blue', 'red', 'filled', 'disabled');
                         
                         // Doğru sınıfları ekle
                         if (playerIndex === 0) {
                             cell.classList.add('player1', 'blue', 'filled');
-                            cell.style.backgroundColor = '#4ecdc4';
-                            cell.style.borderColor = '#26a69a';
-                            cell.style.color = '#4ecdc4'; // Text color same as background to hide white dot
                         } else {
                             cell.classList.add('player2', 'red', 'filled');
-                            cell.style.backgroundColor = '#ff6b6b';
-                            cell.style.borderColor = '#e53e3e';
-                            cell.style.color = '#ff6b6b'; // Text color same as background to hide white dot
                         }
-                        cell.textContent = '●';
                     } else {
                         // Frontend gameBoard'unu da güncelle
                         gameBoard[row][col] = 0;
@@ -3710,29 +3705,77 @@
                 }
             }
             
-            // Skorları güncelle - Backend array formatında [player0, player1] gönderiyor
+            // Skorları güncelle
             if (gameState.scores) {
                 player1Score = gameState.scores[0] || 0;
                 player2Score = gameState.scores[1] || 0;
                 updateScoreDisplay();
-                console.log('Skorlar updateGameFromServer\'dan güncellendi:', gameState.scores);
+                console.log('Skorlar güncellendi:', gameState.scores);
             }
             
-            // Sırayı güncelle - Backend 0,1 kullanıyor, frontend 1,2 kullanıyor
-            currentPlayer = gameState.currentPlayer + 1; // 0->1, 1->2 dönüşümü
+            // Sırayı güncelle
+            currentPlayer = gameState.currentPlayer + 1;
             updateCurrentPlayerDisplay();
             
-            // Etkisiz noktaları güncelle - Backend'ten gelen disabledPoints'i işle
-            // ÖNEMLİ: gameBoard güncellemesi tamamlandıktan SONRA disabledPoints güncellenmeli
+            // ÖNEMLİ DÜZELTME: Etkisiz noktaları doğru şekilde güncelle
             if (gameState.disabledPoints) {
-                disabledPoints = gameState.disabledPoints;
-                console.log('updateGameFromServer: disabledPoints güncellendi, toplam:', disabledPoints.length);
-                // gameBoard artık güncel olduğu için updateDisabledPointsDisplay doğru çalışacak
-                updateDisabledPointsDisplay();
+                console.log('Backend disabledPoints alındı:', gameState.disabledPoints);
                 
-                // ÖNEMLİ: Online oyunda updateActivePointCounts çağrısı eksikti!
+                // Backend'ten gelen disabledPoints'i işle
+                disabledPoints = gameState.disabledPoints.map(dp => {
+                    // Backend formatını frontend formatına çevir
+                    return {
+                        x: dp.x,
+                        y: dp.y,
+                        player: dp.player
+                    };
+                });
+                
+                console.log('Frontend disabledPoints güncellendi:', disabledPoints);
+                
+                // Tüm disabled noktaları görsel olarak güncelle
+                updateAllDisabledPoints();
+                
+                // Aktif nokta sayılarını güncelle
                 updateActivePointCounts();
             }
+        }
+        
+        // Tüm etkisiz noktaları görsel olarak güncelle - YENİ FONKSİYON
+        function updateAllDisabledPoints() {
+            console.log('updateAllDisabledPoints çağrıldı, disabledPoints:', disabledPoints);
+            
+            // Önce tüm noktaların disabled durumunu temizle
+            document.querySelectorAll('.grid-point').forEach(point => {
+                point.classList.remove('disabled');
+                point.style.opacity = '';
+                point.style.backgroundColor = '';
+                point.style.border = '';
+                point.style.cursor = '';
+            });
+            
+            // Backend'ten gelen tüm disabled noktaları işle
+            disabledPoints.forEach(dp => {
+                const gridPoint = document.querySelector(`[data-row="${dp.y}"][data-col="${dp.x}"]`);
+                if (gridPoint) {
+                    gridPoint.classList.add('disabled');
+                    gridPoint.style.cursor = 'not-allowed';
+                    
+                    // Boş nokta ise yeşil renk, dolu nokta ise opacity düşür
+                    if (dp.player === 0) {
+                        // BOŞ NOKTA - yeşil renk
+                        gridPoint.style.backgroundColor = '#ccffcc';
+                        gridPoint.style.border = '2px solid #66cc66';
+                        console.log(`✓ Boş nokta etkisiz: (${dp.x}, ${dp.y})`);
+                    } else {
+                        // DOLU NOKTA - opacity düşür
+                        gridPoint.style.opacity = '0.3';
+                        console.log(`✓ Dolu nokta etkisiz: (${dp.x}, ${dp.y}), player: ${dp.player}`);
+                    }
+                }
+            });
+            
+            console.log('Tüm etkisiz noktalar güncellendi');
         }
 
         // Odadan çık
