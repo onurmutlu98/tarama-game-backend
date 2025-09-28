@@ -1344,8 +1344,8 @@
 
         .chat-message.received {
             align-self: flex-start;
-            background: rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.95);
+            background: rgba(200, 200, 200, 0.8);
+            color: #000000;
             border-bottom-left-radius: 5px;
         }
 
@@ -1354,12 +1354,37 @@
             opacity: 1;
             margin-bottom: 2px;
             font-weight: 700;
+        }
+
+        .chat-message.sent .message-sender {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .chat-message.received .message-sender {
             color: #000000;
         }
 
         .message-content {
             font-size: 13px;
+        }
+
+        .chat-message.sent .message-content {
+            color: white;
+        }
+
+        .chat-message.received .message-content {
             color: #000000;
+        }
+
+
+
+        .chat-message.sent .message-time {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .chat-message.received .message-time {
+            color: #000000;
+            opacity: 1;
         }
 
         .message-time {
