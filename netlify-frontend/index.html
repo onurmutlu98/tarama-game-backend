@@ -2217,7 +2217,6 @@
             
             let blueCount = 0;
             let redCount = 0;
-            let disabledCount = 0;
             
             // Tüm grid'i tara ve aktif noktaları say (etkisiz olanları hariç tut)
             for (let row = 0; row < 20; row++) {
@@ -2227,20 +2226,19 @@
                     
                     console.log(`Nokta (${col}, ${row}): değer=${pointValue}, etkisiz=${isDisabled}`);
                     
-                    // Etkisiz nokta kontrolü yap
+                    // Sadece aktif noktaları say
                     if (!isDisabled) {
                         if (pointValue === 1) {
                             blueCount++;
                         } else if (pointValue === 2) {
                             redCount++;
                         }
-                    } else {
-                        // Etkisiz nokta sayısını artır
-                        disabledCount++;
-                        console.log(`Etkisiz nokta bulundu: (${col}, ${row}), değer: ${pointValue}`);
                     }
                 }
             }
+            
+            // Etkisiz nokta sayısını disabledPoints dizisinden al (TÜM etkisiz noktalar dahil)
+            const disabledCount = disabledPoints.length;
             
             console.log(`Sayım sonuçları - Mavi: ${blueCount}, Kırmızı: ${redCount}, Etkisiz: ${disabledCount}`);
             
