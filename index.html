@@ -3146,19 +3146,27 @@
             console.log(`   Rakip oyuncu: ${currentPlayer === 1 ? 2 : 1} (${currentPlayer === 1 ? 'Kırmızı' : 'Mavi'})`);
             console.log('─'.repeat(80));
             
-            // Puan hesapla
+            // Puan hesapla ve noktaları etkisiz hale getir
             let score = 0;
             enclosedPoints.forEach(point => {
-                console.log(`Nokta kontrol ediliyor: (${point.x}, ${point.y}), gameBoard değeri:`, gameBoard[point.y] ? gameBoard[point.y][point.x] : 'undefined');
+                const boardValue = gameBoard[point.y] ? gameBoard[point.y][point.x] : undefined;
+                console.log(`Nokta kontrol ediliyor: (${point.x}, ${point.y}), gameBoard değeri:`, boardValue);
                 
-                // SADECE RAKIP OYUNCUNUN NOKTALARI için puan ver ve etkisiz yap
-                if (gameBoard[point.y] && gameBoard[point.y][point.x] === opponentPlayer) {
+                // KENDİ NOKTALARI ASLA ETKİSİZ HALE GETİRİLMEZ!
+                // Çevreleme yapan oyuncunun kendi noktaları çevreleme sınırı içinde kalsa bile aktif kalır
+                if (boardValue === currentPlayer) {
+                    console.log(`✅ Kendi nokta tespit edildi: (${point.x}, ${point.y}) - ETKİSİZ YAPILMAYACAK`);
+                    return; // Bu noktayı atla, hiçbir işlem yapma
+                }
+                
+                // RAKIP OYUNCUNUN NOKTALARI için puan ver ve etkisiz yap
+                if (boardValue === opponentPlayer) {
                     // Etkisiz nokta kontrolü - etkisiz noktalar skora katkı yapmasın
                     const isAlreadyDisabled = disabledPoints.some(dp => 
                         dp.x === point.x && dp.y === point.y && dp.player === opponentPlayer
                     );
                     
-                    console.log(`Rakip nokta bulundu: (${point.x}, ${point.y}), zaten etkisiz mi:`, isAlreadyDisabled);
+                    console.log(`🔴 Rakip nokta bulundu: (${point.x}, ${point.y}), zaten etkisiz mi:`, isAlreadyDisabled);
                     
                     if (!isAlreadyDisabled) {
                         score++;
@@ -3178,12 +3186,14 @@
                     }
                 }
                 
-                // Çevrelenen alandaki boş noktaları da etkisiz hale getir
-                else if (gameBoard[point.y] && gameBoard[point.y][point.x] === 0) {
+                // BOŞ NOKTALARI da etkisiz hale getir
+                else if (boardValue === 0) {
                     // Boş nokta etkisiz kontrolü
                     const isAlreadyDisabled = disabledPoints.some(dp => 
                         dp.x === point.x && dp.y === point.y && dp.player === 0
                     );
+                    
+                    console.log(`🟢 Boş nokta bulundu: (${point.x}, ${point.y}), zaten etkisiz mi:`, isAlreadyDisabled);
                     
                     if (!isAlreadyDisabled) {
                         const pointElement = document.querySelector(`[data-row="${point.y}"][data-col="${point.x}"]`);
@@ -3192,19 +3202,12 @@
                             pointElement.style.backgroundColor = '#ccffcc'; // Boş etkisiz noktalar için açık yeşil renk
                             pointElement.style.border = '2px solid #66cc66'; // Yeşil kenar çizgisi
                             pointElement.style.cursor = 'not-allowed';
-                            console.log(`✓ Local oyun: Boş nokta etkisiz hale getirildi: (${point.x}, ${point.y})`);
+                            console.log(`✓ Boş nokta etkisiz hale getirildi: (${point.x}, ${point.y})`);
                         }
                         
                         // Etkisiz noktalar listesine ekle (player: 0 = boş nokta)
                         disabledPoints.push({ x: point.x, y: point.y, player: 0 });
                     }
-                }
-                
-                // KENDİ NOKTALARI ASLA ETKİSİZ HALE GETİRİLMEZ!
-                // Çevreleme yapan oyuncunun kendi noktaları çevreleme sınırı içinde kalsa bile aktif kalır
-                else if (gameBoard[point.y] && gameBoard[point.y][point.x] === currentPlayer) {
-                    console.log(`Kendi nokta tespit edildi: (${point.x}, ${point.y}) - ETKİSİZ YAPILMAYACAK`);
-                    // Hiçbir şey yapma - kendi noktalar aktif kalır
                 }
             });
             
