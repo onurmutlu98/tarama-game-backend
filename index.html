@@ -3710,7 +3710,7 @@
 
             // Chat mesajı dinleyicisi
             socket.on('chatMessage', (data) => {
-                displayChatMessage(data.message, data.senderName, data.timestamp, data.senderId !== socket.id);
+                displayChatMessage(data);
             });
 
             socket.on('enclosureFinished', (data) => {
