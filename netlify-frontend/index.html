@@ -3619,6 +3619,9 @@
                 document.getElementById('player1Name').textContent = 'Mavi Oyuncu';
                 document.getElementById('player2Name').textContent = 'Kırmızı Oyuncu';
                 
+                // Local modda yeni oyun butonunu göster
+                document.getElementById('reset-game-btn').style.display = 'block';
+                
                 // Oyunu başlat
                 restartGame();
             } else if (mode === 'online') {
@@ -3991,6 +3994,9 @@
             
             // Chat bölümünü görünür yap
             document.getElementById('chatSection').style.display = 'block';
+            
+            // Online modda yeni oyun butonunu gizle
+            document.getElementById('reset-game-btn').style.display = 'none';
             
             // Oyuncu isimlerini güncelle (online modda)
             if (gameState && gameState.players) {
