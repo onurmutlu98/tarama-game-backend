@@ -1302,6 +1302,203 @@
             100% { transform: scale(1); }
         }
 
+        /* Chat Bölümü Stilleri */
+        .chat-header {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px 10px 0 0;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-messages {
+            height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chat-message {
+            padding: 8px 12px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.4;
+            animation: fadeInMessage 0.3s ease-in;
+        }
+
+        .chat-message.own {
+            align-self: flex-end;
+            background: linear-gradient(145deg, #007bff, #0056b3);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .chat-message.other {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.95);
+            border-bottom-left-radius: 5px;
+        }
+
+        .chat-message .sender {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .chat-message .content {
+            font-size: 13px;
+        }
+
+        .chat-input-container {
+            position: relative;
+        }
+
+        .emoji-picker {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            z-index: 1000;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .emoji-btn {
+            font-size: 20px;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            text-align: center;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .emoji-btn:hover {
+            background: rgba(0, 123, 255, 0.2);
+            transform: scale(1.2);
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0 0 10px 10px;
+        }
+
+        .emoji-toggle-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .emoji-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        #chatInput {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        #chatInput:focus {
+            outline: none;
+            border-color: #007bff;
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+        }
+
+        #chatInput::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .chat-send-btn {
+            background: linear-gradient(145deg, #28a745, #20c997);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .chat-send-btn:hover {
+            background: linear-gradient(145deg, #20c997, #28a745);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        .chat-send-btn:active {
+            transform: translateY(0);
+        }
+
+        @keyframes fadeInMessage {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Chat mesajları için scroll bar stilleri */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
         /* Gereksiz win message CSS'leri kaldırıldı */
     </style>
 </head>
@@ -1473,6 +1670,46 @@
                     <button id="reset-game-btn" class="control-btn reset-btn" onclick="restartGame()">
                         🔄 Yeni Oyun
                     </button>
+                </div>
+            </div>
+            
+            <!-- Chat Bölümü (Sadece Online Modda Görünür) -->
+            <div id="chatSection" class="right-bottom" style="display: none;">
+                <div class="chat-header">
+                    <strong>💬 Sohbet</strong>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Chat mesajları buraya eklenecek -->
+                </div>
+                
+                <div class="chat-input-container">
+                    <div class="emoji-picker" id="emojiPicker" style="display: none;">
+                        <div class="emoji-grid">
+                            <span class="emoji-btn" onclick="addEmoji('😀')">😀</span>
+                            <span class="emoji-btn" onclick="addEmoji('😂')">😂</span>
+                            <span class="emoji-btn" onclick="addEmoji('😍')">😍</span>
+                            <span class="emoji-btn" onclick="addEmoji('🤔')">🤔</span>
+                            <span class="emoji-btn" onclick="addEmoji('😎')">😎</span>
+                            <span class="emoji-btn" onclick="addEmoji('😢')">😢</span>
+                            <span class="emoji-btn" onclick="addEmoji('😡')">😡</span>
+                            <span class="emoji-btn" onclick="addEmoji('👍')">👍</span>
+                            <span class="emoji-btn" onclick="addEmoji('👎')">👎</span>
+                            <span class="emoji-btn" onclick="addEmoji('❤️')">❤️</span>
+                            <span class="emoji-btn" onclick="addEmoji('🔥')">🔥</span>
+                            <span class="emoji-btn" onclick="addEmoji('⚡')">⚡</span>
+                            <span class="emoji-btn" onclick="addEmoji('🎉')">🎉</span>
+                            <span class="emoji-btn" onclick="addEmoji('🏆')">🏆</span>
+                            <span class="emoji-btn" onclick="addEmoji('🎯')">🎯</span>
+                            <span class="emoji-btn" onclick="addEmoji('🎮')">🎮</span>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-row">
+                        <button class="emoji-toggle-btn" onclick="toggleEmojiPicker()">😊</button>
+                        <input type="text" id="chatInput" placeholder="Mesaj yazın..." maxlength="100" onkeypress="handleChatKeyPress(event)">
+                        <button class="chat-send-btn" onclick="sendChatMessage()">📤</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3463,6 +3700,11 @@
                 onlineMoveMade = false;
             });
 
+            // Chat mesajı dinleyicisi
+            socket.on('chatMessage', (data) => {
+                displayChatMessage(data.message, data.senderName, data.timestamp, data.senderId !== socket.id);
+            });
+
             socket.on('enclosureFinished', (data) => {
                 console.log('enclosureFinished eventi alındı:', data);
                 if (data.success) {
@@ -3697,6 +3939,9 @@
             // Oyun modu göstergesini güncelle
             document.getElementById('gameModeIndicator').textContent = 'Online Oyun';
             
+            // Chat bölümünü görünür yap
+            document.getElementById('chatSection').style.display = 'block';
+            
             // Oyuncu isimlerini güncelle (online modda)
             if (gameState && gameState.players) {
                 const player1 = gameState.players.find(p => p.isHost);
@@ -3824,6 +4069,81 @@
             console.log('Tüm etkisiz noktalar güncellendi');
         }
 
+        // Chat fonksiyonları
+        function toggleEmojiPicker() {
+            const emojiPicker = document.getElementById('emojiPicker');
+            emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function addEmoji(emoji) {
+            const chatInput = document.getElementById('chatInput');
+            chatInput.value += emoji;
+            chatInput.focus();
+            // Emoji picker'ı kapat
+            document.getElementById('emojiPicker').style.display = 'none';
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (!message || !socket || !currentRoom) {
+                return;
+            }
+            
+            // Mesajı sunucuya gönder
+            socket.emit('sendChatMessage', {
+                roomCode: currentRoom,
+                message: message,
+                senderName: playerName
+            });
+            
+            // Input'u temizle
+            chatInput.value = '';
+            
+            // Emoji picker'ı kapat
+            document.getElementById('emojiPicker').style.display = 'none';
+        }
+
+        function displayChatMessage(data) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            
+            // Kendi mesajımız mı kontrol et
+            const isMyMessage = data.senderId === socket.id;
+            messageDiv.className = `chat-message ${isMyMessage ? 'sent' : 'received'}`;
+            
+            // Zaman damgası formatla
+            const timestamp = new Date(data.timestamp);
+            const timeString = timestamp.toLocaleTimeString('tr-TR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            messageDiv.innerHTML = `
+                <div class="message-sender">${data.senderName}</div>
+                <div class="message-content">${data.message}</div>
+                <div class="message-time">${timeString}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll'u en alta kaydır
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Mesaj animasyonu
+            setTimeout(() => {
+                messageDiv.style.opacity = '1';
+                messageDiv.style.transform = 'translateY(0)';
+            }, 10);
+        }
+
         // Odadan çık
         function leaveRoom() {
             if (socket) {
@@ -3839,6 +4159,12 @@
             document.getElementById('onlinePanel').style.display = 'none';
             document.getElementById('roomPanel').style.display = 'none';
             document.getElementById('gameArea').style.display = 'none';
+            
+            // Chat bölümünü gizle
+            document.getElementById('chatSection').style.display = 'none';
+            
+            // Chat mesajlarını temizle
+            document.getElementById('chatMessages').innerHTML = '';
             
             // Online bağlantıyı kes
             if (socket) {

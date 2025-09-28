@@ -546,6 +546,25 @@ io.on('connection', (socket) => {
         });
     });
 
+    // Chat mesajı gönderme
+    socket.on('sendChatMessage', ({ roomCode, message, senderName }) => {
+        console.log(`Chat mesajı alındı - Oda: ${roomCode}, Gönderen: ${senderName}, Mesaj: ${message}`);
+        
+        const room = rooms[roomCode];
+        if (!room) {
+            console.log('Oda bulunamadı');
+            return;
+        }
+        
+        // Mesajı odadaki tüm oyunculara gönder
+        io.to(roomCode).emit('chatMessage', {
+            message: message,
+            senderName: senderName,
+            timestamp: new Date().toISOString(),
+            senderId: socket.id
+        });
+    });
+
     // Oyunu yeniden başlat
     socket.on('restartGame', (roomCode) => {
         const room = rooms[roomCode];
