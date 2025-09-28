@@ -2215,32 +2215,18 @@
             console.log('updateActivePointCounts çağrıldı');
             console.log('disabledPoints dizisi:', disabledPoints);
             
-            let blueCount = 0;
-            let redCount = 0;
+            // Her oyuncu için etkisiz nokta sayısını hesapla
+            const blueDisabledCount = disabledPoints.filter(dp => dp.player === 1).length;
+            const redDisabledCount = disabledPoints.filter(dp => dp.player === 2).length;
             
-            // Tüm grid'i tara ve aktif noktaları say (etkisiz olanları hariç tut)
-            for (let row = 0; row < 20; row++) {
-                for (let col = 0; col < 20; col++) {
-                    const pointValue = gameBoard[row][col];
-                    const isDisabled = isPointDisabled(col, row, pointValue);
-                    
-                    console.log(`Nokta (${col}, ${row}): değer=${pointValue}, etkisiz=${isDisabled}`);
-                    
-                    // Sadece aktif noktaları say
-                    if (!isDisabled) {
-                        if (pointValue === 1) {
-                            blueCount++;
-                        } else if (pointValue === 2) {
-                            redCount++;
-                        }
-                    }
-                }
-            }
+            // Aktif nokta sayısı = toplam nokta sayısı - etkisiz nokta sayısı
+            const blueCount = player1TotalPoints - blueDisabledCount;
+            const redCount = player2TotalPoints - redDisabledCount;
             
             // Etkisiz nokta sayısını disabledPoints dizisinden al (TÜM etkisiz noktalar dahil)
             const disabledCount = disabledPoints.length;
             
-            console.log(`Sayım sonuçları - Mavi: ${blueCount}, Kırmızı: ${redCount}, Etkisiz: ${disabledCount}`);
+            console.log(`Sayım sonuçları - Mavi: ${blueCount} (toplam: ${player1TotalPoints}, etkisiz: ${blueDisabledCount}), Kırmızı: ${redCount} (toplam: ${player2TotalPoints}, etkisiz: ${redDisabledCount}), Etkisiz: ${disabledCount}`);
             
             // UI'yi güncelle
             const blueCountElement = document.getElementById('blue-points-count');
