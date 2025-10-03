@@ -935,26 +935,83 @@
         }
 
         @media (max-width: 480px) {
+            .header {
+                padding: 16px 12px;
+            }
+            
+            .main-content {
+                padding: 10px;
+                gap: 12px;
+            }
+            
+            .left-panel, .right-panel {
+                padding: 15px;
+                gap: 12px;
+            }
+            
             .canvas-container {
-                width: 320px;
-                height: 320px;
+                width: 92vw;
+                max-width: 380px;
+                aspect-ratio: 1 / 1;
+                height: auto;
             }
             
             .grid-container {
-                grid-template-columns: repeat(20, 12px);
-                grid-template-rows: repeat(20, 12px);
-                padding: 10px;
+                grid-template-columns: repeat(20, min(4vw, 14px));
+                grid-template-rows: repeat(20, min(4vw, 14px));
+                padding: 8px;
+                gap: 1px;
             }
             
             .grid-point {
-                width: 12px;
-                height: 12px;
+                width: auto;
+                height: auto;
                 border-width: 1px;
             }
             
             .game-title {
-                font-size: 24px;
-                letter-spacing: 1px;
+                font-size: 22px;
+                letter-spacing: 0.5px;
+                text-align: center;
+            }
+            
+            .game-controls {
+                gap: 10px;
+            }
+            
+            .control-btn {
+                padding: 14px 18px;
+                font-size: 16px;
+                width: 100%;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .chat-input-row {
+                gap: 8px;
+            }
+            
+            .emoji-toggle-btn {
+                padding: 10px;
+                font-size: 18px;
+            }
+            
+            .grid-container, .grid-point, .canvas-container {
+                user-select: none;
+            }
+        }
+        
+        @media (hover: none) {
+            .control-btn:hover,
+            .enclosure-btn:hover,
+            .pass-btn:hover,
+            .finish-btn:hover,
+            .cancel-btn:hover,
+            .reset-btn:hover,
+            .undo-btn:hover,
+            .emoji-toggle-btn:hover {
+                transform: none;
+                box-shadow: none;
             }
         }
 
