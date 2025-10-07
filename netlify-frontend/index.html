@@ -935,83 +935,26 @@
         }
 
         @media (max-width: 480px) {
-            .header {
-                padding: 16px 12px;
-            }
-            
-            .main-content {
-                padding: 10px;
-                gap: 12px;
-            }
-            
-            .left-panel, .right-panel {
-                padding: 15px;
-                gap: 12px;
-            }
-            
             .canvas-container {
-                width: 92vw;
-                max-width: 380px;
-                aspect-ratio: 1 / 1;
-                height: auto;
+                width: 320px;
+                height: 320px;
             }
             
             .grid-container {
-                grid-template-columns: repeat(20, min(4vw, 14px));
-                grid-template-rows: repeat(20, min(4vw, 14px));
-                padding: 8px;
-                gap: 1px;
+                grid-template-columns: repeat(20, 12px);
+                grid-template-rows: repeat(20, 12px);
+                padding: 10px;
             }
             
             .grid-point {
-                width: auto;
-                height: auto;
+                width: 12px;
+                height: 12px;
                 border-width: 1px;
             }
             
             .game-title {
-                font-size: 22px;
-                letter-spacing: 0.5px;
-                text-align: center;
-            }
-            
-            .game-controls {
-                gap: 10px;
-            }
-            
-            .control-btn {
-                padding: 14px 18px;
-                font-size: 16px;
-                width: 100%;
-                -webkit-tap-highlight-color: transparent;
-                touch-action: manipulation;
-            }
-            
-            .chat-input-row {
-                gap: 8px;
-            }
-            
-            .emoji-toggle-btn {
-                padding: 10px;
-                font-size: 18px;
-            }
-            
-            .grid-container, .grid-point, .canvas-container {
-                user-select: none;
-            }
-        }
-        
-        @media (hover: none) {
-            .control-btn:hover,
-            .enclosure-btn:hover,
-            .pass-btn:hover,
-            .finish-btn:hover,
-            .cancel-btn:hover,
-            .reset-btn:hover,
-            .undo-btn:hover,
-            .emoji-toggle-btn:hover {
-                transform: none;
-                box-shadow: none;
+                font-size: 24px;
+                letter-spacing: 1px;
             }
         }
 
@@ -2828,6 +2771,13 @@
                     return;
                 }
                 
+                // Sıra kontrolü (online): sadece kendi sıranızda hamle yapabilirsiniz
+                const myPlayerNumber = typeof getMyPlayerNumber === 'function' ? getMyPlayerNumber() : null;
+                if (myPlayerNumber && currentPlayer !== myPlayerNumber) {
+                    alert('Sıra sizde değil!');
+                    return;
+                }
+                
                 // Frontend currentPlayer (1,2) -> Backend playerIndex (0,1) dönüşümü
                 socket.emit('makeMove', { roomCode: currentRoom, row, col, playerIndex: currentPlayer - 1 });
                 
@@ -3038,6 +2988,13 @@
 
         // Oyuncu hamle yaptıktan sonra seçenekleri göster
         function showMoveOptions() {
+            // Online modda: seçenekleri sadece sıradaki oyuncu görsün
+            if (currentGameMode === 'online' && typeof getMyPlayerNumber === 'function') {
+                const myPlayerNumber = getMyPlayerNumber();
+                if (myPlayerNumber && currentPlayer !== myPlayerNumber) {
+                    return; // Sıra bende değilse seçenekleri göstermeyelim
+                }
+            }
             const manualControls = document.getElementById('manual-enclosure-controls');
             manualControls.style.display = 'block';
         }
@@ -3882,7 +3839,18 @@
                     console.log('Çevreleme başarısız:', data.message);
                     alert(data.message);
                     resetManualEnclosureMode();
-                    showMoveOptions();
+                    // Online modda sırada olmayan oyuncuya seçenekleri gösterme
+                    if (currentGameMode === 'online' && typeof getMyPlayerNumber === 'function') {
+                        const myPlayerNumber = getMyPlayerNumber();
+                        if (myPlayerNumber && currentPlayer !== myPlayerNumber) {
+                            hideMoveOptions();
+                            waitingForPlayerAction = false;
+                        } else {
+                            showMoveOptions();
+                        }
+                    } else {
+                        showMoveOptions();
+                    }
                 }
             });
 
