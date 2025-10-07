@@ -150,6 +150,69 @@ io.on('connection', (socket) => {
         console.log(`${playerName} odaya katıldı: ${roomCode}`);
     });
 
+    // Normal (herkese açık) müsait odaya katıl veya yoksa oluştur
+    socket.on("joinOpenRoom", ({ playerName }) => {
+        if (!playerName) {
+            socket.emit("error", "Lütfen adınızı girin!");
+            return;
+        }
+
+        // Müsait normal oda bul (1 oyunculu, isPrivate=false)
+        const openRoomCode = Object.keys(rooms).find(code => {
+            const room = rooms[code];
+            return room && !room.isPrivate && room.players.length === 1;
+        });
+
+        if (openRoomCode) {
+            const room = rooms[openRoomCode];
+            if (room.players.length >= 2) {
+                socket.emit("error", "Oda dolu!");
+                return;
+            }
+
+            room.players.push({
+                id: socket.id,
+                name: playerName,
+                ready: false,
+                isHost: false
+            });
+            room.lastActivity = new Date();
+
+            socket.join(openRoomCode);
+            socket.emit("roomJoined", { roomCode: openRoomCode, isHost: false });
+            io.to(openRoomCode).emit("playersUpdate", room.players);
+            console.log(`${playerName} normal odaya katıldı: ${openRoomCode}`);
+            return;
+        }
+
+        // Müsait normal oda yoksa yeni normal oda oluştur
+        const roomCode = generateRoomCode();
+        rooms[roomCode] = {
+            players: [{
+                id: socket.id,
+                name: playerName,
+                ready: false,
+                isHost: true
+            }],
+            gameState: {
+                board: Array(20).fill().map(() => Array(20).fill(null)),
+                currentPlayer: 0,
+                gameStarted: false,
+                gameEnded: false,
+                winner: null,
+                scores: [0, 0],
+                disabledPoints: []
+            },
+            isPrivate: false,
+            createdAt: new Date(),
+            lastActivity: new Date()
+        };
+
+        socket.join(roomCode);
+        socket.emit("roomCreated", { roomCode, isHost: true });
+        console.log(`Yeni normal oda oluşturuldu: ${roomCode} - Host: ${playerName}`);
+    });
+
     // Hazır durumu değiştir
     socket.on("toggleReady", (roomCode) => {
         if (!rooms[roomCode]) return;
@@ -647,67 +710,4 @@ io.on('connection', (socket) => {
 server.listen(PORT, () => {
     console.log(`Server ${PORT} portunda çalışıyor`);
     console.log(`Health check: http://localhost:${PORT}/health`);
-});
-
-// Normal (herkese açık) müsait odaya katıl veya yoksa oluştur
-socket.on("joinOpenRoom", ({ playerName }) => {
-    if (!playerName) {
-        socket.emit("error", "Lütfen adınızı girin!");
-        return;
-    }
-
-    // Müsait normal oda bul (1 oyunculu, isPrivate=false)
-    const openRoomCode = Object.keys(rooms).find(code => {
-        const room = rooms[code];
-        return room && !room.isPrivate && room.players.length === 1;
-    });
-
-    if (openRoomCode) {
-        const room = rooms[openRoomCode];
-        if (room.players.length >= 2) {
-            socket.emit("error", "Oda dolu!");
-            return;
-        }
-
-        room.players.push({
-            id: socket.id,
-            name: playerName,
-            ready: false,
-            isHost: false
-        });
-        room.lastActivity = new Date();
-
-        socket.join(openRoomCode);
-        socket.emit("roomJoined", { roomCode: openRoomCode, isHost: false });
-        io.to(openRoomCode).emit("playersUpdate", room.players);
-        console.log(`${playerName} normal odaya katıldı: ${openRoomCode}`);
-        return;
-    }
-
-    // Müsait normal oda yoksa yeni normal oda oluştur
-    const roomCode = generateRoomCode();
-    rooms[roomCode] = {
-        players: [{
-            id: socket.id,
-            name: playerName,
-            ready: false,
-            isHost: true
-        }],
-        gameState: {
-            board: Array(20).fill().map(() => Array(20).fill(null)),
-            currentPlayer: 0,
-            gameStarted: false,
-            gameEnded: false,
-            winner: null,
-            scores: [0, 0],
-            disabledPoints: []
-        },
-        isPrivate: false,
-        createdAt: new Date(),
-        lastActivity: new Date()
-    };
-
-    socket.join(roomCode);
-    socket.emit("roomCreated", { roomCode, isHost: true });
-    console.log(`Yeni normal oda oluşturuldu: ${roomCode} - Host: ${playerName}`);
 });
