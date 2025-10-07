@@ -3692,8 +3692,18 @@
                 updateGameFromServer(gameState);
             });
 
-            socket.on('playerLeft', () => {
-                alert('Diğer oyuncu odadan ayrıldı!');
+            socket.on('playerLeft', (data) => {
+                if (data && typeof data.winnerIndex !== 'undefined') {
+                    const myIndex = (typeof getMyPlayerNumber === 'function') ? getMyPlayerNumber() - 1 : null;
+                    const amIWinner = myIndex !== null && myIndex === data.winnerIndex;
+                    if (amIWinner) {
+                        alert('Rakip ayrıldı. Oyunu kazandınız!');
+                    } else {
+                        alert('Diğer oyuncu odadan ayrıldı!');
+                    }
+                } else {
+                    alert('Diğer oyuncu odadan ayrıldı!');
+                }
                 backToModeSelection();
             });
 

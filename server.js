@@ -620,6 +620,13 @@ io.on('connection', (socket) => {
                         room.players[0].isHost = true;
                     }
                     io.to(roomCode).emit("playersUpdate", room.players);
+                    
+                    // Oyuncu ayrıldığında oyunu sonlandır ve kalan oyuncuyu kazanan ilan et
+                    const winnerIndex = playerIndex === 0 ? 1 : 0;
+                    room.gameState.gameEnded = true;
+                    room.gameState.winner = winnerIndex;
+                    console.log(`Rakip ayrıldı. Oyun sonlandırıldı. Kazanan index: ${winnerIndex}`);
+                    io.to(roomCode).emit('playerLeft', { winnerIndex });
                 }
             }
         });
