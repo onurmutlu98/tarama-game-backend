@@ -419,7 +419,8 @@ io.on('connection', (socket) => {
             room.gameState.scores = [0, 0]; // [player0, player1]
         }
         
-        room.gameState.scores[playerIndex] += validation.enclosedOpponentCount;
+        // Skor hesaplamasını gerçek etkisiz olmayan rakip noktalara göre yap
+        let scoredThisEnclosure = 0;
         
         // Çevrelenen rakip noktaları etkisiz hale getir
         if (!room.gameState.disabledPoints) {
@@ -451,12 +452,14 @@ io.on('connection', (socket) => {
                 );
                 
                 if (!alreadyDisabled) {
+                    // Skoru sadece yeni etkisiz yapılan rakip noktalar için artır
+                    scoredThisEnclosure++;
                     room.gameState.disabledPoints.push({
                         x: point.x,
                         y: point.y,
                         player: opponentPlayer
                     });
-                    console.log(`✓ Rakip nokta etkisiz hale getirildi: (${point.x}, ${point.y}) - player: ${opponentPlayer}`);
+                    console.log(`✓ Rakip nokta etkisiz hale getirildi ve skor artırıldı: (${point.x}, ${point.y}) - player: ${opponentPlayer}, scoredThisEnclosure: ${scoredThisEnclosure}`);
                 }
             }
             // BOŞ NOKTALAR - Sadece etkisiz yap (puan verme)
@@ -493,6 +496,9 @@ io.on('connection', (socket) => {
             }
         }
         
+        // Skoru güncelle: yalnızca yeni etkisiz yapılan rakip noktalar
+        room.gameState.scores[playerIndex] += scoredThisEnclosure;
+        
         // Sırayı değiştir
         room.gameState.currentPlayer = 1 - room.gameState.currentPlayer;
         console.log('Çevreleme tamamlandı, yeni currentPlayer:', room.gameState.currentPlayer);
@@ -502,7 +508,7 @@ io.on('connection', (socket) => {
             success: true,
             gameState: room.gameState,
             enclosedPoints: data.selectedPoints,
-            score: validation.enclosedOpponentCount,
+            score: scoredThisEnclosure,
             totalScores: room.gameState.scores
         });
         
