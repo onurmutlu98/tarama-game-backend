@@ -1569,7 +1569,6 @@
                 <div class="online-section">
                     <h3>Oda Oluştur</h3>
                     <input type="text" id="hostPlayerName" placeholder="Adınızı girin" maxlength="20">
-                    <div class="checkbox-row"><input type="checkbox" id="isPrivateRoom" checked> <label for="isPrivateRoom">Özel oda (kod ile giriş)</label></div>
                     <button class="mode-card online-btn" onclick="createRoom()">
                         <div class="mode-icon">🏠</div>
                         <span>Oda Oluştur</span>
@@ -1585,10 +1584,6 @@
                     <button class="mode-card online-btn" onclick="joinRoom()">
                         <div class="mode-icon">🚪</div>
                         <span>Odaya Katıl</span>
-                    </button>
-                    <button class="mode-card online-btn" onclick="joinOpenRoom()">
-                        <div class="mode-icon">🌟</div>
-                        <span>Kodsuz Katıl (Müsait Oda)</span>
                     </button>
                 </div>
             </div>
@@ -3896,8 +3891,7 @@
             }
             
             playerName = name;
-            const isPrivate = document.getElementById('isPrivateRoom') ? document.getElementById('isPrivateRoom').checked : true;
-            socket.emit('createRoom', { playerName: name, isPrivate });
+            socket.emit('createRoom', name);
         }
 
         // Odaya katıl
@@ -3920,24 +3914,6 @@
             
             playerName = name;
             socket.emit('joinRoom', { roomCode, playerName: name });
-        }
-
-        // Kodsuz müsait odaya katıl
-        function joinOpenRoom() {
-            const name = document.getElementById('joinPlayerName').value.trim();
-            if (!name) {
-                alert('Lütfen adınızı girin!');
-                return;
-            }
-
-            if (!socket) {
-                const backendURL = 'https://tarama-game-backend.onrender.com';
-                socket = io(backendURL);
-                setupSocketListeners();
-            }
-
-            playerName = name;
-            socket.emit('joinOpenRoom', { playerName: name });
         }
 
         // Oda panelini göster
